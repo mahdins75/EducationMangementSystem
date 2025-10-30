@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseBlazorWebAssembly>true</UseBlazorWebAssembly>
+
+	</PropertyGroup>
+
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.14" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Mstech.Frontend.Wallet.Servies\Mstech.Frontend.Wallet.Service.csproj" />
+		<ProjectReference Include="..\..\Mstech.Frontend.wallet.ViewModel\Mstech.Frontend.Wallet.ViewModel.csproj" />
+		<ProjectReference Include="..\Mstech.Wallet.Components\Mstech.Wallet.Components.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="Memebership\Auth&amp;Authorize\ConfirmRegistration.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	  <Content Update="Memebership\Auth&amp;Authorize\ChangePasswordForFirstLogin.razor.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	  <Content Update="Memebership\Auth&amp;Authorize\Register.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	  <Content Update="Memebership\UserManagement\Role\RoleAccessedLink.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	  <Content Update="Memebership\UserManagement\UserProfile\UserProfileEdit.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	  <Content Update="Memebership\UserManagement\UserProfile\Index.razor">
+	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+	</ItemGroup>
+
+</Project>

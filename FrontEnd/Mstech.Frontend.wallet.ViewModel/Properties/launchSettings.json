@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Mstech.Frontend.Wallet.ViewModel": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:62625;http://localhost:62626"
+    }
+  }
+}

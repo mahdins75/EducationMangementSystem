@@ -1,0 +1,116 @@
+﻿@using Mstech.Frontend.Wallet.Service.Interface.Common
+@inject ISideNavService _sideNavService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid d-flex justify-content-center">
+        <a class="navbar-brand" href="">
+            <img src="/Images/logo.png" style="vertical-align: middle; max-width:500px" alt="تراولت Logo" height="70"> <!-- Adjust height as needed -->
+        </a>
+    </div>
+</div>
+
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        @foreach (var item in NavItems)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@item.Href" Match="NavLinkMatch.All">
+                    <div class="nav-link-span">   <span class="@item.IconClass  " aria-hidden="true"></span> @item.Text</div>
+                </NavLink>
+
+                @if (item.SubItems.Any())
+                {
+                    <div class="nav-item dropdown px-3">
+                        <a class="nav-link dropdown-toggle" href="#" id="@item.Text" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="@item.IconClass" aria-hidden="true"></span> @item.Text
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="@item.Text">
+                            @foreach (var subItem in item.SubItems)
+                            {
+                                <li><a class="dropdown-item" href="@subItem.Href">@subItem.Text</a></li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        }
+    </nav>
+</div>
+<style>
+    .gradient-nav-menu {
+        color: white;
+        height: 100%;
+        width: 100%;
+    }
+
+        .gradient-nav-menu .nav-link {
+            color: white;
+        }
+
+    .nav-link-span {
+        color: white;
+        margin-right: 10px !important
+    }
+
+    .gradient-nav-menu .nav-link:hover {
+        color: #ddd;
+    }
+
+    .nav-scrollable {
+        background: linear-gradient(to right, #6c757d, #6c757d);
+    }
+</style>
+@code {
+    private bool collapseNavMenu = true;
+
+    private string navMenue = "";
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private List<NavItemViewModel> NavItems { get; set; } = new();
+
+    private string pageTitle = "Trabase";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await _sideNavService.GetNavItems();
+            if (!response.IsSuccess)
+            {
+
+                if ((response.ErrorCode != null && response.ErrorCode == "Unauthorized") || (response.ErrorCode != null && response.ErrorCode == "Forbidden"))
+                {
+                    var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                    if (currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/ChangePasswordForFirstLogin".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower() && currentPath.ToLower() != "/Membership/ConfirmRegistration".ToLower())
+                    {
+                        NavigationManager.NavigateTo("/membership/Login");
+                    }
+                }
+                else
+                {
+                }
+
+            }
+            else
+            {
+                NavItems = response.Entity;
+
+            }
+
+        }
+        catch
+        {
+
+        }
+
+    }
+}

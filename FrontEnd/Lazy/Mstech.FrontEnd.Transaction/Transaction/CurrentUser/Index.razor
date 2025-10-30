@@ -1,0 +1,148 @@
+﻿@page "/Transaction/CurrentUser/Index"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+
+
+@inject ITransactionService transactionService
+@inject IUserService userService
+@inject IDynamicTitleService dynamicTitleService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+<div class="content m-4">
+    <div class="row">
+        <div class="col-12">
+
+            <SearchPanel grid="grid" searchModel="searchModel" OnValueChanged="UpdateParentValue" />
+
+            <div class="card">
+                <div class="card-header">
+                    لیست زیر مجموعه ها
+                </div>
+                <div class="card-body">
+                    <!-- Radzen Grid -->
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@WalletClients" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.Amount)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.Amount))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionDateTimeText)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionDateTimeText))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionTypeTitle)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionTypeTitle))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.InvoiceTitle)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionTypeTitle))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="TransactionViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    @*    <button class="btn  btn-sm " @onclick="() => OpenEditModal(data)"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="btn btn-sm btn" @onclick="() => OpenDeleteConfirmationModal(data)"><i class="fa-regular fa-trash"></i></button> *@
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<br />
+
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+    RadzenDataGrid<TransactionViewModel> grid = new();
+    List<TransactionViewModel> WalletClients = new();
+    public TransactionViewModel searchModel { get; set; }
+
+    private string modalDisplayClass = "";
+    private string modalStyle = "none !important";
+    int count;
+    bool isLoading = false;
+    private bool isProcessing = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        searchModel = new();
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        var pageTitle = await dynamicTitleService.GetPageTitle("WalletClient");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        StateHasChanged();
+    }
+    async Task LoadData(LoadDataArgs args)
+    {
+        var currentUser = await userService.GetUserInfoInTheLocalStorage();
+
+        isLoading = true;
+        isProcessing = true;
+        StateHasChanged();
+
+        await Task.Yield();
+
+        var query = await transactionService.GetAll(new TransactionViewModel()
+            {
+                WalletOwnerUserName = currentUser.Entity.UserName,
+                Wallet = new WalletViewModel() { WalletType = WalletType.Purchase, Client = new WalletClientViewModel() { ClientIdForApi = searchModel.ClientApiId } },
+                PageSize = args.Top.Value,
+                Skip = args.Skip.Value,
+                IsPagination = true,
+                InvoiceId = searchModel.InvoiceId,
+            });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            WalletClients = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            WalletClients = new List<TransactionViewModel>(); // Empty list if data is null
+        }
+        if (query.Entity != null)
+        {
+            WalletClients = query.Entity.ToList();
+
+        }
+
+        isLoading = false;
+        isProcessing = false;
+        StateHasChanged();
+
+    }
+
+
+    private void UpdateParentValue(TransactionViewModel model)
+    {
+        searchModel = model;
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(TransactionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+
+}

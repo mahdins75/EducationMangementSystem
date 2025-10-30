@@ -1,0 +1,140 @@
+﻿@using Mstech.ADV.Keys;
+@model ManageConstantViewModel
+@{
+    var pageName = Model.EntityName == ConstantEntityNames.__Tag ? "تگ"
+    : Model.EntityName == ConstantEntityNames.__Source ? "منبع"
+    : Model.EntityName == ConstantEntityNames.__UserPosition ? "سمت"
+    : Model.EntityName == ConstantEntityNames.__Department ? "دپارتمان"
+    : "";
+}
+<!-- Manage Constant Modal -->
+<div class="modal fade" id="modalManageConstant" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered modal-dialog-scrollable" role="document">
+        <form class="form w-100"
+              enctype="multipart/form-data"
+              method="post"
+              id="ManageConstantForm"
+              asp-area="Admin"
+              asp-controller="Constant"
+              asp-action="Manage"
+              data-ajax="true">
+
+            <input type="hidden" asp-for="Id" />
+
+            <input type="hidden" asp-for="EntityName" />
+
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title white" id="exampleModalCenterTitle">مدیریت @pageName</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="بستن">
+                        <i class="bx bx-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-body">
+                        <div class="row">
+                            <div class="col-md-12 col-12">
+                                <div class="form-group">
+                                    <label asp-for="Name"></label>
+                                    <input asp-for="Name" id="first-name-vertical" class="form-control" placeholder="عنوان">
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                        <i class="bx bx-x d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">انصراف</span>
+                    </button>
+                    <button type="submit" class="btn btn-success ml-1">
+                        <i class="bx bx-check d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">ثبت</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $('#ManageConstantForm').submit(function (e) {
+        e.preventDefault();
+        $(".loader-box").css("display", "block");
+        var action = $(this).attr('action');
+        var formData = new FormData($(this).get(0));
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: action,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data, status, settings) {
+                $(".loader-box").css("display", "none");
+                if (data.success) {
+                    toastr.success('عملیات با موفقیت انجام شد.', 'عملیات موفق', {
+                        rtl: true,
+                        positionClass: 'toast-bottom-right',
+                        containerId: 'toast-bottom-right'
+                    });
+                    reloadConstantDataTable();
+                    resetManageForm();
+                    $('#modalManageConstant').modal('toggle');
+                }
+                else {
+                    if (data.isValid) {
+                        toastr.error(data.message, 'اخطار!', {
+                            rtl: true,
+                            positionClass: 'toast-bottom-right',
+                            containerId: 'toast-bottom-right'
+                        });
+                    }
+                    else {
+                        displayValidationManageErrors(data.errors);
+                    }
+                }
+            },
+            error: function (request, options, err) {
+                $(".loader-box").css("display", "none");
+                toastr.error('عملیات با خطا مواجه شد.', 'اخطار!', {
+                    rtl: true,
+                    positionClass: 'toast-bottom-right',
+                    containerId: 'toast-bottom-right'
+                });
+            }
+        });
+        return true;
+    });
+
+    function displayValidationManageErrors(errors) {
+
+        resetManageValidation();
+
+        for (var i = 0; i < errors.length; i++) {
+            var error = errors[i];
+            var fieldName = error.property;
+            var errorMessage = error.errors;
+
+            var fieldErrorElement = $('#modalManageConstant [data-valmsg-for="' + fieldName + '"]');
+            fieldErrorElement.text(errorMessage);
+
+            fieldErrorElement.addClass('inputs-error');
+        }
+    }
+
+    function resetManageForm() {
+        $('#ManageConstantForm input[name=Name]').val('');
+    }
+
+    function resetManageValidation() {
+
+        $('#modalManageConstant .text-danger').text('');
+        $('#modalManageConstant .text-danger').removeClass('inputs-error');
+    }
+
+</script>
+

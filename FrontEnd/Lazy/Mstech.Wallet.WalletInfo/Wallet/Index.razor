@@ -1,0 +1,250 @@
+﻿@page "/WalletInfo/Wallet/Index"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+
+@inject IJSRuntime JS
+@inject IDynamicTitleService dynamicTitleService
+@inject IWalletService WalletService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+<div class="content">
+    <div class="row">
+        <div class="col-12">
+            <WalletSearchPanel grid="grid" searchModel="searchModel" OnValueChanged="UpdateParentValue" />
+
+            <div class="card">
+                <div class="card-header">
+                    لیست زیر مجموعه ها
+                </div>
+                <div class="card-body">
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count"
+                                    Data="@Wallets" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true"
+                                    AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center"
+                                    ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(WalletViewModel.UserName)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(WalletViewModel.UserName))" Frozen="true"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletViewModel.UserFullName)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(WalletViewModel.UserFullName))" Frozen="true"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletViewModel.ClientName)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(WalletViewModel.ClientName))"
+                                                  Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletViewModel.WalletTypeTitle)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(WalletViewModel.WalletTypeTitle))"
+                                                  Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletViewModel.Balance)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(WalletViewModel.Balance))" Frozen="true"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="WalletViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    <a class="btn  btn-sm " @onclick="(() => NvigateToTransactionDetail(data))">
+                                        <i class="">پرداخت</i>
+                                    </a>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal @modalDisplayClass fade show d-block " tabindex="-1" role="dialog"
+     style="background-color: rgba(0, 0, 0, 0.5); display:@modalStyle;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Wallet Client</h5>
+                <button type="button" class="close" @onclick="HideEditModal"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+@code {
+
+    RadzenDataGrid<WalletViewModel> grid = new();
+    RadzenDropDown<int> statusDropDown = new();
+    RadzenDropDown<string> ownerDropDown = new();
+    List<SelectListItem> statusDropDownData = new();
+    List<SelectListItemStringValue> ownerDropDownData = new();
+    List<WalletViewModel> Wallets = new();
+    WalletViewModel newWallet = new WalletViewModel();
+    WalletViewModel editWallet = new WalletViewModel();
+    private string modalDisplayClass = "";
+    private string modalStyle = "none !important";
+    public WalletViewModel searchModel { get; set; }
+    int count;
+    bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        searchModel = new();
+        searchModel.User = new();
+        var clientStatusResponse = await getDropDownDataService.GetEnumFropDown<ClientStatus>();
+        if (clientStatusResponse.IsSuccess)
+        {
+            if ((clientStatusResponse.ErrorCode != null && clientStatusResponse.ErrorCode == "Unauthorized") || (clientStatusResponse.ErrorCode != null && clientStatusResponse.ErrorCode == "Forbidden"))
+            {
+                NavigationManager.NavigateTo("");
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", clientStatusResponse.Message, "error");
+            }
+        }
+
+        statusDropDownData = clientStatusResponse.Entity;
+
+
+        var ownerResponse = await getDropDownDataService.GetDropDownUsers(new UserViewModel());
+        if (!ownerResponse.IsSuccess)
+        {
+            if ((ownerResponse.ErrorCode != null && ownerResponse.ErrorCode == "Unauthorized") || (ownerResponse.ErrorCode != null && ownerResponse.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", ownerResponse.Message, "error");
+            }
+        }
+
+        ownerDropDownData = ownerResponse.Entity;
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        var pageTitle = await dynamicTitleService.GetPageTitle("Wallet");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        StateHasChanged();
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        var query = await WalletService.GetAll(new WalletViewModel()
+        {
+            User = new UserViewModel() { UserName = searchModel.User.UserName },
+            WalletType = WalletType.Purchase,
+            PageSize = args.Top.Value,
+            Skip = args.Skip.Value,
+            IsPagination = true
+        });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            Wallets = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            Wallets = new List<WalletViewModel>(); // Empty list if data is null
+        }
+
+        if (query.Entity != null)
+        {
+            Wallets = query.Entity.ToList();
+        }
+
+        isLoading = false;
+    }
+
+    async Task<WalletViewModel> LoadSingleForEdit(int id)
+    {
+        var query = await WalletService.GetAll(new WalletViewModel() { Id = id, IsPagination = false });
+
+        if (query?.Entity != null)
+        {
+            return query.Entity.FirstOrDefault();
+        }
+        else
+        {
+            return new WalletViewModel();
+        }
+    }
+
+    // async Task AddWallet()
+    // {
+    //     await WalletService.Create(new WalletViewModel
+    //         {
+    //             Title = newWallet.Title,
+    //             OwnerId = newWallet.OwnerId,
+    //             ActivationStatus = newWallet.ActivationStatus
+    //         });
+    //     await grid.Reload();
+    // }
+    // async Task EditWallet()
+    // {
+    //     var result = await WalletService.Update(new WalletViewModel
+    //         {
+    //             Id = editWallet.Id,
+    //             Title = editWallet.Title,
+    //             OwnerId = editWallet.OwnerId,
+    //             ActivationStatus = editWallet.ActivationStatus
+    //         });
+    //     await grid.Reload();
+    //     HideEditModal();
+    // }
+    private async void OpenEditModal(WalletViewModel Wallet)
+    {
+        editWallet = await LoadSingleForEdit(Wallet.Id);
+        modalDisplayClass = "show";
+        modalStyle = "block";
+        StateHasChanged();
+    }
+
+    private void HideEditModal()
+    {
+        modalDisplayClass = "hide ";
+        modalStyle = "none !important";
+        StateHasChanged();
+    }
+
+    private async Task NvigateToTransactionDetail(WalletViewModel model)
+    {
+        NavigationManager.NavigateTo("/WalletInfo/Wallet/WalletTransactions?walletId=" + model.Id);
+    }
+
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(WalletViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+
+        return propertyName;
+    }
+
+    private void UpdateParentValue(WalletViewModel model)
+    {
+        model = new WalletViewModel();
+        model.User = new();
+
+        searchModel = model;
+    }
+
+}

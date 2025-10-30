@@ -1,0 +1,128 @@
+﻿@page "/Membership/Role/create"
+
+@inject IRoleService roleService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        ساخت سطح دسترسی جدید
+    </div>
+    <div class="card-body">
+        <EditForm Model="NewRole" OnValidSubmit="@(() => AddRole())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(RoleViewModel.Name))</label>
+                    <InputText class="form-control" @bind-Value="NewRole.Name" />
+                    <ValidationMessage For="@(() => NewRole.Name)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(RoleViewModel.PersianName))</label>
+                    <InputText class="form-control" @bind-Value="NewRole.PersianName" />
+                    <ValidationMessage For="@(() => NewRole.PersianName)" />
+
+                </div>
+            </div>
+            <!-- Save Button -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">ذخیره تغییرات</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+
+
+    List<RoleViewModel> Roles = new();
+
+    [Parameter]
+    public RoleViewModel NewRole { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<RoleViewModel> grid { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        NewRole = new();
+        StateHasChanged();
+    }
+    async Task AddRole()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await roleService.Create(new RoleViewModel
+            {
+                Name = NewRole.Name,
+                PersianName = NewRole.PersianName,
+            });
+        if (!result.IsSuccess)
+        {
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+
+            }
+
+        }
+        else
+        {
+            NewRole = new RoleViewModel();
+        }
+
+        isProcessing = false;
+        StateHasChanged();
+        await grid.Reload();
+    }
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(RoleViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName;
+    }
+
+}

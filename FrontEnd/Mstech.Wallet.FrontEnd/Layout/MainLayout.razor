@@ -1,0 +1,131 @@
+﻿@using Mstech.Frontend.Wallet.Service.Interface.Membership
+@inherits LayoutComponentBase
+
+@inject NavigationManager NavigationManager
+@inject IUserService userService;
+@if (!isLoading)
+{
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <main>
+            <div class="top-row px-4 d-flex justify-content-between align-items-center">
+                <!-- "About" link -->
+                @* <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a> *@
+                <a></a>
+                <!-- User icon dropdown -->
+                @if (isLoggedIn)
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user"></i> @currentUser.FullName
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><button class="dropdown-item  link " @onclick="@(async () => await Navigate("/Membership/UserProfile/Index"))">پروفایل کاربری</button></li>
+                            <li><button class="dropdown-item  link " @onclick="@(async () => await Navigate("/Membership/Register"))">تنظیمات سیستم</button></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item" onclick="@LogOute" href="#">خروج</button></li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" @onclick="@(async () => await Navigate("/Membership/Login"))"> ورود</a></li>
+                            <li><a class="dropdown-item" @onclick="@(async () => await Navigate("/Membership/Register"))">ثبت نام</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                        </ul>
+                    </div>
+                }
+
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+
+}
+
+@code {
+
+    private bool isLoggedIn { get; set; }
+    private bool isLoading { get; set; } = true;
+
+    private UserViewModel currentUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+        if (currentPath.ToLower() == "/")
+        {
+            NavigationManager.NavigateTo("/WalletInfo/Wallet/DashBoard");
+        }
+        await LoadNavItems();
+        isLoading = false;
+        StateHasChanged();
+
+    }
+    private async Task LoadNavItems()
+    {
+        var currentUserInLocalStorage = await userService.GetUserInfoInTheLocalStorage();
+
+        if (!currentUserInLocalStorage.IsSuccess)
+        {
+            await userService.RemoveUserInfoInTheLocalStorage();
+
+            if ((currentUserInLocalStorage.ErrorCode != null && currentUserInLocalStorage.ErrorCode == "Unauthorized") || (currentUserInLocalStorage.ErrorCode != null && currentUserInLocalStorage.ErrorCode == "Forbidden"))
+            {
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                if (currentPath.ToLower() != "/Membership/ChangePasswordForFirstLogin".ToLower() && currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower() && currentPath.ToLower() != "/Membership/ConfirmRegistration".ToLower())
+                {
+                    NavigationManager.NavigateTo("/membership/Login");
+                }
+            }
+            else
+            {
+            }
+
+        }
+
+        if (currentUserInLocalStorage.Entity != null)
+        {
+            isLoggedIn = true;
+
+            currentUser = currentUserInLocalStorage.Entity;
+        }
+        else
+        {
+            isLoggedIn = false;
+
+            currentUser = new UserViewModel();
+        }
+    }
+
+    public async Task RefreshLayout()
+    {
+        await LoadNavItems();
+
+        StateHasChanged();
+    }
+
+    private async Task LogOute()
+    {
+        await userService.Logout();
+
+        NavigationManager.NavigateTo("/Membership/Login", forceLoad: true);
+    }
+
+    private async Task Navigate(string url)
+    {
+        NavigationManager.NavigateTo(url);
+    }
+}

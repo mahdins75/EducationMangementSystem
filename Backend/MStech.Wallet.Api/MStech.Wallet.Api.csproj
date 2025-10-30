@@ -1,0 +1,71 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e97d5938-ec48-47f3-a56e-1e218e457795</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DNTCaptcha.Core" Version="5.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.*">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.*">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.*" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MStech.Wallet.DataBase\MStech.Wallet.DataBase.csproj" />
+    <ProjectReference Include="..\Mstech.Wallet.Common\Mstech.Wallet.Common.csproj" />
+    <ProjectReference Include="..\MStech.Wallet.Services\MStech.Wallet.Services.csproj" />
+    <ProjectReference Include="..\MStech.Wallet.ViewModel\MStech.Wallet.ViewModel.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Areas\Notification\Data\" />
+    <Folder Include="Areas\Notification\Models\" />
+    <Folder Include="Areas\Notification\Views\" />
+    <Folder Include="Areas\Wallet\Data\" />
+    <Folder Include="Areas\Wallet\Models\" />
+    <Folder Include="Areas\Wallet\Views\" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Account\AccessDenied.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Account\ForgotPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Account\GeneratePasswordResetToken.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Account\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Account\LoginSuccess.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Account\Register.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Role\Create.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Role\Edit.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Role\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\Role\_DataTable.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\RoleAccessedLink\Error.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\RoleAccessedLink\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\_ViewImports.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Membership\Views\_ViewStart.cshtml" />
+  </ItemGroup>
+</Project>

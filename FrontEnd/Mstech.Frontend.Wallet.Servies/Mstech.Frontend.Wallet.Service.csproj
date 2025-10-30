@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UseBlazorWebAssembly>true</UseBlazorWebAssembly>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	  <PackageReference Include="SweetAlert" Version="1.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Mstech.Frontend.wallet.ViewModel\Mstech.Frontend.Wallet.ViewModel.csproj" />
+	</ItemGroup>
+
+</Project>

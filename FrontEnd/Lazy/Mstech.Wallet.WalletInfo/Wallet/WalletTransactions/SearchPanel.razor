@@ -1,0 +1,246 @@
+﻿@page "/WalletInfo/Wallet/SearchPanel"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@inject ITransactionService transactionService
+@inject IWalletClientService walletClientService
+@inject IUserService userService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        موارد جستجو
+    </div>
+    <div class="card-body">
+        <EditForm Model="searchModel" OnValidSubmit="@(() => search())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="row">
+                <div class="col-md-6">
+                    <label>@GetDisplayName(nameof(TransactionInvoiceViewModel.InvoiceId), "TransactionInvoiceViewModel")</label>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="" class="">
+                        <RadzenLabel Component="DropDownFiltering" />
+                        <RadzenDropDown @ref=@InvoiceDropDownList
+                                        AllowFiltering="true"
+                                        Data=@InvoiceDropDownData
+                                        TextProperty="Title"
+                                        ValueProperty="Value"
+                                        @bind-Value="searchModel.InvoiceId"
+                                        Style="width: 100%; max-width: 400px;"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        FilterOperator="StringFilterOperator.StartsWith"
+                                        AllowClear="true"
+                                        Name="InvoiceId" />
+                    </RadzenStack>
+                </div>
+                <div class="col-md-6">
+                    <label>@GetDisplayName(nameof(GetAllOfMyClientsViewModel.Title), "GetAllOfMyClientsViewModel")</label>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="" class="">
+                        <RadzenLabel Component="DropDownFiltering" />
+                        <RadzenDropDown @ref=@ClientDropDownList
+                                        AllowFiltering="true"
+                                        Data=@ClientDropDownData
+                                        TextProperty="Title"
+                                        ValueProperty="Value"
+                                        @bind-Value="searchModel.ClientApiId"
+                                        Style="width: 100%; max-width: 400px;"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        FilterOperator="StringFilterOperator.StartsWith"
+                                        AllowClear="true"
+                                        Name="ClientApiId" />
+                    </RadzenStack>
+                </div>
+
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">جستجو</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+
+    RadzenDropDown<int?> InvoiceDropDownList = new();
+    RadzenDropDown<string> ClientDropDownList = new();
+
+    List<TransactionViewModel> transactions = new();
+
+    public List<SelectListItem> InvoiceDropDownData { get; set; }
+    public List<SelectListItemStringValue> ClientDropDownData { get; set; }
+
+    [Parameter]
+    public TransactionViewModel searchModel { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<TransactionViewModel> grid { get; set; }
+
+    [Parameter]
+    public EventCallback<TransactionViewModel> OnValueChanged { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        InvoiceDropDownList = new();
+        ClientDropDownList = new();
+        InvoiceDropDownData = new();
+        ClientDropDownData = new();
+
+
+        searchModel = new TransactionViewModel();
+        var currentUser = await userService.GetUserInfoInTheLocalStorage();
+        var getAllInvoices = await transactionService.GetAllInvoices(new TransactionViewModel()
+            {
+                WalletOwnerUserName = currentUser.Entity.UserName,
+                Wallet = new WalletViewModel() { },
+                WalletId = searchModel.WalletId
+            });
+
+        if (getAllInvoices.IsSuccess)
+        {
+
+            InvoiceDropDownData = getAllInvoices.Entity.Where(a => a.InvoiceId != null).DistinctBy(m => m.InvoiceId).Select(x => new SelectListItem() { Title = string.IsNullOrEmpty(x.InvoiceTitle) ? "نامشخص" + x.InvoiceId.Value : x.InvoiceTitle, Value = x.InvoiceId.Value }).ToList();
+        }
+        if (!getAllInvoices.IsSuccess)
+        {
+
+            if ((getAllInvoices.ErrorCode != null && getAllInvoices.ErrorCode == "Unauthorized") || (getAllInvoices.ErrorCode != null && getAllInvoices.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", getAllInvoices.Message, "error");
+
+            }
+
+        }
+
+        var getAllOfMyClients = await transactionService.GetAllOfMyUsers(new TransactionViewModel()
+            {
+                WalletOwnerUserName = currentUser.Entity.UserName,
+                Wallet = new WalletViewModel() { },
+                WalletId = searchModel.WalletId
+
+            });
+
+        if (getAllOfMyClients.IsSuccess)
+        {
+
+            ClientDropDownData = getAllOfMyClients.Entity.Select(x => new SelectListItemStringValue() { Title = x.FullName, Value = x.UserName }).ToList();
+        }
+        if (!getAllOfMyClients.IsSuccess)
+        {
+
+            if ((getAllOfMyClients.ErrorCode != null && getAllOfMyClients.ErrorCode == "Unauthorized") || (getAllOfMyClients.ErrorCode != null && getAllInvoices.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", getAllOfMyClients.Message, "error");
+
+            }
+
+        }
+        StateHasChanged();
+    }
+
+    async Task search()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        // var result = await transactionService.GetAll(new TransactionViewModel
+        //     {
+        //         InvoiceId = searchModel.InvoiceId,
+        //         Wallet = new WalletViewModel() { WalletType = WalletType.Purchase }
+        //     });
+        // transactions = new List<TransactionViewModel>();
+
+        await grid.Reload();
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private async Task UpdateValue()
+    {
+        await OnValueChanged.InvokeAsync(searchModel);
+    }
+
+    string GetDisplayName(string propertyName, string objectName)
+    {
+        if (objectName == "TransactionInvoiceViewModel")
+        {
+            var prop = typeof(TransactionInvoiceViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+            return propertyName;
+        }
+        else if (objectName == "GetAllOfMyClientsViewModel")
+        {
+            var prop = typeof(GetAllOfMyClientsViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+            return propertyName;
+        }
+        else
+        {
+            return "";
+        }
+
+    }
+
+
+
+
+
+}

@@ -1,0 +1,109 @@
+﻿<table id="User_Table" class="table table-hover table-bordered text-center mb-0">
+    <thead class="thead-dark">
+        <tr>
+            <th>نام و نام خانوادگی</th>
+            <th>نقش</th>
+            <th>سمت</th>
+            <th>وضعیت</th>
+            <th>اقدامات</th>
+        </tr>
+    </thead>
+</table>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var userDataTable;
+
+        loadUserDataTable();
+    });
+
+    function loadUserDataTable() {
+        userDataTable = $('#User_Table').DataTable({
+            "bAutoWidth": false,
+            "processing": true,
+            "serverSide": true,
+            "searching": false,
+            "ajax": function (data, callback, settings) {  // Make the Ajax call ourselves
+                $.ajax({
+                    url: '@Url.Action("UserDataTable", "User", new { Area = "Admin" })',
+                    type: "POST",
+                    async: true,
+                    dataType: "json",
+                    data: {
+                        columns: data.columns, // Needed for paging
+                        draw: data.draw, // Needed for paging
+                        length: data.length, // Needed for paging
+                        order: data.order, // Needed for paging
+                        search: data.search, // Needed for paging
+                        start: data.start, // Needed for paging
+                        filter: getFilterUserDataTable()
+                    }
+                }).done(function (data, textStatus, jqXHR) {
+                    callback(data);
+                })
+            },
+            "columns": [
+                {
+                    "name": "FullName",
+                    "data": "fullName",
+                    "orderable": true,
+                    "searchable": false,
+                    "class": "text-left",
+                    "render": function (data, type, full, meta) {
+                        return '<div class="avatar m-0" style="margin-left: 8px !important;"><img src="/assets/images/avatar.png" alt="avtar img holder" height="32" width="32"></div>' + data;
+                    },
+                },
+                { "name": "RoleName", "data": "roleName", "orderable": true, "searchable": true, },
+                { "name": "PositionName", "data": "positionName", "orderable": true, "searchable": true, },
+                {
+                    "name": "IsActive",
+                    "data": "isActive",
+                    "orderable": true,
+                    "searchable": false,
+                    "render": function (data, type, full, meta) {
+                        return data ? '<div class="badge badge-success">فعال</div>' : '<div class="badge badge-danger">غیرفعال</div>';
+                    },
+                },
+                {
+                    "name": "operationColumn",
+                    "data": null,
+                    "orderable": false,
+                    "searchable": false,
+                    "defaultContent": "",
+                    "class": "col-operation"
+                }
+            ],
+            "rowCallback": function (row, data, index) {
+                var btnEdit = btnDelete = btnChangePass = '';
+                btnEdit = "<a href='#' id='btnEdit-" + data.id + "' data-id='" + data.id + "' title='ویرایش'><i class='badge-circle badge-circle-light-secondary bx bx-edit-alt font-medium-1'></i></a>";
+                btnDelete = "<a href='#' id='btnDelete-" + data.id + "' data-id='" + data.id + "' title='حذف'><i class='badge-circle badge-circle-light-secondary bx bx-trash font-medium-1'></i></a>";
+                btnAddRole = "<a href='#' id='btnAddRole-" + data.id + "' data-id='" + data.id + "' title='افزودن نقش'><i class='badge-circle badge-circle-light-secondary bx bxs-user-detail font-medium-1'></i></a>";
+                btnChangePass = "<a href='#' id='btnChangePass-" + data.id + "' data-roleid='" + data.roleId + "' data-id='" + data.id + "' title='تغییر کلمه عبور'><i class='badge-circle badge-circle-light-secondary bx bx-lock-alt font-medium-1'></i></a>";
+
+                $(row).children('td.col-operation').append(btnEdit + btnDelete + btnChangePass + btnAddRole);
+
+            }
+        });
+    }
+
+    function getFilterUserDataTable() {
+        var filter = {
+            "FullName": $('#User_Index input[name=FullName]').val(),
+            "Status": $('#User_Index #Status').val(),
+            //"Title": $('#User_Index .filter input[name=Title]').val()
+        };
+        return filter;
+    }
+
+    function resetFilterUserDataTable() {
+        $('#User_Index input[name=FullName]').val("");
+        $('#User_Index #Status').val("");
+    }
+
+    function reloadUserDataTable() {
+        userDataTable.ajax.reload();
+    }
+
+</script>

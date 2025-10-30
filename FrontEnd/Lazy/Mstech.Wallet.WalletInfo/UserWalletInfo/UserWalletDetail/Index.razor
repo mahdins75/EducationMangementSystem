@@ -1,0 +1,154 @@
+﻿@page "/UserWalletInfo/UserWalletDetail/Index"
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@using Mstech.FrontEnd.Wallet.ViewModel
+
+@inject IJSRuntime JS
+
+@inject IWalletService walletService
+
+@inject ITransactionService transactionService
+
+@inject IUserService userservice;
+
+@inject IDynamicTitleService dynamicTitleService
+
+
+@inject NavigationManager NavigationManager
+
+@inject SweetAlertService SweetAlert
+
+<div class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    لیست تراکنش های کیف پول
+                </div>
+                <div class="card-body">
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@Transactions" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionDateTimeText)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionDateTimeText))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.Amount)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.Amount))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionTypeTitle)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionTypeTitle))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.IsWalletValue)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.IsWalletValue))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="UserViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+
+    RadzenDataGrid<TransactionViewModel> grid = new();
+
+    List<TransactionViewModel> Transactions = new();
+
+
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    int walletId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        var pageTitle = await dynamicTitleService.GetPageTitle("WalletDetail");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        walletId = Convert.ToInt32(query["walletId"]);
+
+        StateHasChanged();
+    }
+
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        var userInfo = await userservice.GetUserInfoInTheLocalStorage();
+
+        var query = await transactionService.GetAll(new TransactionViewModel() { WalletId = walletId, WalletOwnerUserName = userInfo.Entity.UserName, PageSize = args.Top.Value, Skip = args.Skip.Value, IsPagination = true });
+
+        await CheckResultStatus(query);
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            Transactions = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            Transactions = new List<TransactionViewModel>(); // Empty list if data is null
+        }
+        if (query.Entity != null)
+        {
+            Transactions = query.Entity.ToList();
+
+        }
+
+        isLoading = false;
+    }
+
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(UserViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName;
+    }
+
+    private async Task CheckResultStatus<Request>(ResponseViewModel<Request> result)
+    {
+        if (!result.IsSuccess)
+        {
+
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbidden"))
+            {
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                if (currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower())
+                {
+                    NavigationManager.NavigateTo("/membership/Login");
+                }
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+            }
+
+        }
+    }
+
+}

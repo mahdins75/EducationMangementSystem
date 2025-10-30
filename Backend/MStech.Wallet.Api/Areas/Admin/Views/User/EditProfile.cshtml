@@ -1,0 +1,295 @@
+﻿@model EditProfileViewModel
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewData["Title"] = "پروفایل کاربری";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-2 mt-1">
+        <div class="row breadcrumbs-top">
+            <div class="col-12">
+                <h5 class="content-header-title float-left pr-1">تنظیمات</h5>
+                <div class="breadcrumb-wrapper">
+                    <ol class="breadcrumb p-0 mb-0">
+                        <li class="breadcrumb-item"><a href="index.html"><i class="bx bx-home-alt"></i></a></li>
+                        <li class="breadcrumb-item active"> پروفایل کاربری</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-body">
+    <!-- account setting page start -->
+    <section id="page-account-settings">
+        <div class="row">
+            <div class="col-12">
+                <div class="row">
+                    <!-- left menu section -->
+                    <div class="col-md-3 mb-2 mb-md-0 pills-stacked">
+                        <ul class="nav nav-pills flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center active" id="account-pill-general" data-toggle="pill" href="#account-vertical-general" aria-expanded="true">
+                                    <i class="bx bx-cog"></i>
+                                    <span>ویرایش اطلاعات کاربری</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center" id="account-pill-password" data-toggle="pill" href="#account-vertical-password" aria-expanded="false">
+                                    <i class="bx bx-lock"></i>
+                                    <span>تغییر رمز عبور</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- right content section -->
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-body">
+                                    <div class="tab-content">
+                                        <div role="tabpanel" class="tab-pane active" id="account-vertical-general" aria-labelledby="account-pill-general" aria-expanded="true">
+                                            <form asp-action="EditProfile" method="post" enctype="multipart/form-data">
+
+                                                <input type="hidden" asp-for="Id" />
+                                                <input type="hidden" asp-for="IsRemovePicture" />
+
+                                                <div class="media">
+                                                    <a href="javascript:%20void(0);">
+                                                        @if (string.IsNullOrEmpty(Model.AvatarSrc))
+                                                        {
+                                                            <img id="img_Profile" src="~/assets/images/avatar.png" class="rounded mr-75" alt="profile image" height="64" width="64">
+                                                        }
+                                                        else
+                                                        {
+                                                            <img id="img_Profile" src="@Model.AvatarSrc" class="rounded mr-75" alt="profile image" height="64" width="64">
+                                                        }
+                                                    </a>
+                                                    <div class="media-body mt-25">
+                                                        <div class="col-12 px-0 d-flex flex-sm-row flex-column justify-content-start">
+                                                            <label for="select-files" class="btn btn-sm btn-light-primary ml-50 mb-50 mb-sm-0">
+                                                                <span>ارسال تصویر جدید</span>
+                                                                <input id="select-files" name="AvatarFile" type="file" hidden>
+                                                            </label>
+                                                            <button class="btn btn-sm btn-light-secondary ml-50">تصویر پیش فرض</button>
+                                                        </div>
+                                                        <p class="text-muted ml-1 mt-50"><small>فایل های مجاز: JPG و PNG  حداکثر اندازه مجاز: 400KB</small></p>
+                                                    </div>
+                                                </div>
+                                                <hr>
+                                                <div class="row">
+                                                    <div class="col-12 col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <label asp-for="Name"></label>
+                                                                <input asp-for="Name" class="form-control text-left" placeholder="نام">
+                                                                <span asp-validation-for="Name" class="text-danger"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <div class="controls">
+                                                                    <label asp-for="LastName"></label>
+                                                                    <input asp-for="LastName" class="form-control text-left" placeholder="نام">
+                                                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <div class="controls">
+                                                                    <label asp-for="Email"></label>
+                                                                    <input type="email" asp-for="Email" class="form-control text-left" placeholder="نام">
+                                                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <label asp-for="Phone"></label>
+                                                                <input asp-for="Phone" class="form-control text-left" placeholder="نام">
+                                                                <span asp-validation-for="Phone" class="text-danger"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 d-flex flex-sm-row flex-column justify-content-end">
+                                                        <button type="submit" class="btn btn-primary glow mr-sm-1 mb-1">ذخیره تغییرات</button>
+                                                        <button type="reset" class="btn btn-light mb-1">انصراف</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="tab-pane fade " id="account-vertical-password" role="tabpanel" aria-labelledby="account-pill-password" aria-expanded="false">
+                                            <form asp-action="ChangePasswordProfile" method="post" id="ChangePasswordProfileForm">
+                                                <input asp-for="Id" type="hidden" />
+                                                <div class="row">
+                                                    <div class="col-12 col-sm-6 offset-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <label for="OldPassword">کلمه عبور قبلی</label>
+                                                                <input type="password" id="OldPassword" name="OldPassword" class="form-control" placeholder="کلمه عبور قبلی">
+                                                                <span for="OldPassword" class="text-danger" id="span_OldPassword"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <label for="Password">کلمه عبور</label>
+                                                                <input type="password" id="Password" name="Password" class="form-control" placeholder="کلمه عبور">
+                                                                <span for="Password" class="text-danger" id="span_Password"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="controls">
+                                                                <label for="ConfirmPassword">تکرار کلمه عبور</label>
+                                                                <input type="password" id="ConfirmPassword" name="ConfirmPassword" class="form-control" placeholder="تکرار کلمه عبور">
+                                                                <span for="ConfirmPassword" class="text-danger" id="span_ConfirmPassword"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 d-flex flex-sm-row flex-column justify-content-end">
+                                                        <button type="submit" class="btn btn-primary glow mr-sm-1 mb-1">ذخیره تغییرات</button>
+                                                        <button type="reset" class="btn btn-light mb-1">انصراف</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- account setting page ends -->
+</div>
+
+<script type="text/javascript">
+
+    $('#select-files').on('change', function () {
+
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const size = (this.files[0].size / 1024).toFixed(2);
+        const type = (this.files[0].type);
+        const name = (this.files[0].name)
+
+        if (!validImageTypes.includes(type)) {
+            toastr.error(`فایل با فرمت نامعتبر انتخاب شده است.`, 'اخطار!', {
+                rtl: true,
+                positionClass: 'toast-bottom-right',
+                containerId: 'toast-bottom-right'
+            });
+            $('#select-files').val('');
+            return;
+        }
+
+        if (parseInt(size) > parseInt(400)) {
+            toastr.error(`حجم تصویر شما باید کمتر از 400 کیلوبایت باشد.`, 'اخطار!', {
+                rtl: true,
+                positionClass: 'toast-bottom-right',
+                containerId: 'toast-bottom-right'
+            });
+            $('#select-files').val('');
+            return;
+        }
+
+        readURL(this);
+
+    });
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#img_Profile').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+
+    $('#ChangePasswordProfileForm').submit(function (e) {
+        e.preventDefault();
+
+        var action = $(this).attr('action');
+        var formData = new FormData($(this).get(0));
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: action,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data, status, settings) {
+
+                $('#ChangePasswordProfileForm .text-danger').text('');
+                $('#ChangePasswordProfileForm .text-danger').removeClass('inputs-error');
+
+                if (data.success) {
+                    toastr.success('تغییر رمز عبور با موفقیت انجام شد.', 'عملیات موفق', {
+                        rtl: true,
+                        positionClass: 'toast-bottom-right',
+                        containerId: 'toast-bottom-right'
+                    });
+                    resetChangePasswordForm();
+                }
+                else {
+                    if (data.isValid) {
+                        toastr.error(data.message, 'اخطار!', {
+                            rtl: true,
+                            positionClass: 'toast-bottom-right',
+                            containerId: 'toast-bottom-right'
+                        });
+                    }
+                    else {
+                        displayValidationErrors(data.errors);
+                    }
+                }
+            },
+            error: function (request, options, err) {
+                var message = 'تغییر کلمه عبور کاربر با خطا مواجه شد.';
+                if (xhr.status == 403) {
+                    message = 'دسترسی این عملیات را ندارید.';
+                }
+                toastr.error(`${message}`, 'اخطار!', {
+                    rtl: true,
+                    positionClass: 'toast-bottom-right',
+                    containerId: 'toast-bottom-right'
+                });
+            }
+        });
+        return true;
+    });
+
+    function displayValidationErrors(errors) {
+
+        for (var i = 0; i < errors.length; i++) {
+            var error = errors[i];
+            var fieldName = error.property;
+            var errorMessage = error.errors;
+            $('#span_' + fieldName).text(errorMessage);
+            $('#span_' + fieldName).addClass('inputs-error');
+        }
+    }
+
+    function resetChangePasswordForm() {
+        $('#ChangePasswordProfileForm input[name=Password]').val('');
+        $('#ChangePasswordProfileForm input[name=OldPassword]').val('');
+        $('#ChangePasswordProfileForm input[name=ConfirmPassword]').val('');
+    }
+
+</script>

@@ -1,0 +1,192 @@
+﻿@page "/Membership/UserProfile/Edit"
+
+@inject IUserService userService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        ویرایش اطلاعات کاربری
+    </div>
+    <div class="card-body">
+        <EditForm Model="editUser" OnValidSubmit="@(() => EditUser())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <input type="hidden" @bind="editUser.Id" />
+            <div class="row">
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.Name))</label>
+                    <InputText class="form-control" @bind-Value="editUser.Name" />
+                    <ValidationMessage For="@(() => editUser.Name)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.LastName))</label>
+                    <InputText class="form-control" @bind-Value="editUser.LastName" />
+                    <ValidationMessage For="@(() => editUser.LastName)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.UserName))</label>
+                    <InputText class="form-control" @bind-Value="editUser.UserName" />
+                    <ValidationMessage For="@(() => editUser.UserName)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.PhoneNumber))</label>
+                    <InputText class="form-control" @bind-Value="editUser.PhoneNumber" />
+                    <ValidationMessage For="@(() => editUser.PhoneNumber)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.Password))</label>
+                    <InputText type="password" class="form-control" @bind-Value="editUser.Password" />
+                    <ValidationMessage For="@(() => editUser.Password)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.ConfirmPassword))</label>
+                    <InputText type="password" class="form-control" @bind-Value="editUser.ConfirmPassword" />
+                    <ValidationMessage For="@(() => editUser.ConfirmPassword)" />
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(UserViewModel.Address))</label>
+                    <InputTextArea class="form-control" @bind-Value="editUser.Address" />
+                </div>
+
+            </div>
+
+            <!-- Save Button -->
+            <div class="row mt-3">
+                <button Icon="refresh"
+                        disabled="@isProcessing"
+                        class="btn btn-success"
+                        Type="submit">
+                    ذخیره تغییرات
+                </button>
+            </div>
+        </EditForm>
+    </div>
+
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+@code {
+
+
+
+    List<UserViewModel> Users = new();
+    [Parameter]
+    public UserViewModel editUser { get; set; }
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        editUser = new();
+        StateHasChanged();
+    }
+
+    async Task EditUser()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await userService.UpdateUser(new UserViewModel
+            {
+                Id = editUser.Id,
+                Name = editUser.Name,
+                UserName = editUser.UserName,
+                LastName = editUser.LastName,
+                PhoneNumber = editUser.PhoneNumber,
+                Password = editUser.Password,
+                ConfirmPassword = editUser.ConfirmPassword,
+                Address = editUser.Address,
+                Status = editUser.Status,
+                IsActive = editUser.IsActive,
+                OnlyCurrentUser = true
+
+            });
+        if (!result.IsSuccess)
+        {
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+
+            }
+
+        }
+        else
+        {
+            // editUser = new UserViewModel();
+            await SweetAlert.ShowAlert("ویرایش اطلاعات کاربری ما موفقیت انجام شد !", result.Message, "success");
+
+        }
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    public async Task LoadSingleForEdit(string id)
+    {
+        isProcessing = true;
+        StateHasChanged();  // Force UI refresh
+
+        await Task.Delay(3000);  // Simulate loading
+
+        var query = await userService.GetAllUsers(new UserViewModel() { Id = id, IsPagination = false });
+
+        if (query?.Entity != null)
+        {
+            editUser = query.Entity.FirstOrDefault();
+
+        }
+        else
+        {
+
+        }
+
+        isProcessing = false;
+        StateHasChanged();  // Hide loader
+
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(UserViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+}

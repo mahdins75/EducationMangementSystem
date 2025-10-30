@@ -1,0 +1,304 @@
+﻿@page "/Membership/Role/RoleAccessedLink"
+
+
+@inject IAccessedLinkService accessedLinkService
+
+@inject IRoleAccessedLinkService roleAccessedLinkService
+
+@inject IGetDropDownDataService getDropDownDataService
+
+@inject NavigationManager NavigationManager
+
+@inject SweetAlertService SweetAlert
+
+<div class="content">
+    <div class="row">
+        <div class="col-12">
+            <form>
+                <input type="hidden" @bind="model.RoleId">
+
+                <section id="bootstrap-treeview" class="bootstraptreeview">
+                    <div class="row">
+                        @foreach (var item in AllAccessedLink.Where(m => m.ParentId == null))
+                        {
+                            allSelected = true;
+
+                            <div class="col-lg-4 col-md-6 col-12">
+
+                                <div class="card">
+                                    <div class="card-header">
+                                        <div class="checkbox">
+                                            @foreach (var item1 in AllAccessedLink.Where(m => m.ParentId == item.Id || m.Id == item.Id))
+                                            {
+                                                if (!RoleAccessedLinks.Where(m => m.AccessedLinkId == item1.Id).Any())
+                                                {
+                                                    allSelected = false;
+                                                }
+
+                                            }
+                                            @if (!allSelected)
+                                            {
+                                                <input type="checkbox" @onchange="(e) => ToggleAllSubLinks(item.Id, ((ChangeEventArgs)e).Value)" class="checkbox-input">
+
+                                            }
+                                            else
+                                            {
+                                                <input type="checkbox" @onchange="(e) => ToggleAllSubLinks(item.Id, ((ChangeEventArgs)e).Value)" class="checkbox-input" checked>
+
+
+                                            }
+                                            @{
+                                                CheckLists.Add(new CheckList() { ParentId = item.Id });
+                                            }
+                                            <label for="Role-Parent-@item.Id-0">@item.Title</label>
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-body">
+                                            <ul class="list-group card-presentation">
+                                                @foreach (var item1 in AllAccessedLink.Where(m => m.ParentId == item.Id || m.Id == item.Id))
+                                                {
+                                                    var referalClass = $@"Role-{@item.Id}-{@item1.Id}";
+                                                    if (RoleAccessedLinks.Where(m => m.AccessedLinkId == item1.Id).Any())
+                                                    {
+                                                        if (firsLoad)
+                                                        {
+                                                            item1.IsChecked = true;
+                                                        }
+
+                                                        <li class="list-group-item">
+                                                            <div class="checkbox checkbox-sm">
+                                                                <input type="checkbox" class="@referalClass" @onchange="(e) => ToggleItem(item1.Id, ((ChangeEventArgs)e).Value)" checked="@item1.IsChecked" />
+                                                                <label for="Role-@item.Id-@item1.Id">@item1.Title</label>
+                                                            </div>
+                                                        </li>
+
+                                                        if (firsLoad)
+                                                        {
+                                                            FirstLoad(item1.Id);
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        if (firsLoad)
+                                                        {
+                                                            item1.IsChecked = false;
+                                                        }
+
+                                                        <li class="list-group-item">
+                                                            <div class="checkbox checkbox-sm">
+                                                                <input type="checkbox" class="@referalClass" @onchange="(e) => ToggleItem(item1.Id, ((ChangeEventArgs)e).Value)" checked="@item1.IsChecked" />
+                                                                <label for="Role-@item.Id-@item1.Id">@item1.Title</label>
+                                                            </div>
+                                                        </li>
+                                                        
+
+                                                    }
+                                                    {
+                                                        var temp = CheckLists.Where(m => m.ParentId == item.Id).FirstOrDefault();
+                                                        temp.Children.Add(new CheckList() { ParentId = item1.Id });
+                                                    }
+                                                }
+
+
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @{
+                            firsLoad = false;
+                        }
+                    </div>
+                </section>
+
+                <div class="d-flex justify-content-end">
+                    <input type="button" onclick="@Add" class="btn btn-success mb-0 mt-75" value="ثبت">
+                    <button type="button" class="btn btn-light glow users-list-clear mb-0 mt-75"
+                            style="margin-right: 7px">
+                        بازگشت
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    CreateRoleAccessLinkViewmodel model = new();
+
+    List<AccessedLinkViewModel> AllAccessedLink = new();
+
+    List<RoleAccessedLinkViewModel> RoleAccessedLinks = new();
+
+    List<CheckList> CheckLists = new();
+
+    bool allSelected = true;
+
+    int roleId = 0;
+
+    bool firsLoad = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        model.Links = new();
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        roleId = Convert.ToInt32(query["roleId"]);
+
+        await GetAllAccessedLinks();
+        await GetRoleAccessedLinks(roleId);
+
+        firsLoad = true;
+        StateHasChanged();
+    }
+
+
+    private async Task GetAllAccessedLinks()
+    {
+        var result = await accessedLinkService.GetAll(new AccessedLinkViewModel());
+        AllAccessedLink = result.Entity;
+
+    }
+
+    private async Task GetRoleAccessedLinks(int roleId)
+    {
+        var result = await roleAccessedLinkService.GetAll(new RoleAccessedLinkViewModel() { RoleId = roleId });
+        RoleAccessedLinks = result.Entity;
+
+    }
+
+    private async Task Add()
+    {
+        var result = await roleAccessedLinkService.Create(new CreateRoleAccessLinkViewmodel() { RoleId = roleId, Links = model.Links });
+        if (!result.IsSuccess)
+        {
+
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbidden"))
+            {
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                if (currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower())
+                {
+                    NavigationManager.NavigateTo("/membership/Login");
+                }
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+            }
+
+        }
+        else
+        {
+
+            await SweetAlert.ShowAlert("موفق !", result.Message, "success");
+            NavigationManager.NavigateTo("");
+
+        }
+        await GetRoleAccessedLinks(roleId);
+
+
+    }
+
+    private async Task NavigateToRolePage()
+    {
+        NavigationManager.NavigateTo("/Membership/Role/Index");
+    }
+
+
+    private void FirstLoad(int itemId)
+    {
+        if (!model.Links.Any(m => m == itemId))
+        {
+            model.Links.Add(itemId);
+
+        }
+    }
+
+    private void ToggleItem(int itemId, object isChecked)
+    {
+        if (!(bool)isChecked)
+        {
+            model.Links.Remove(itemId);
+        }
+        else
+        {
+            if (!model.Links.Any(m => m.Equals(itemId)))
+            {
+                model.Links.Add(itemId);
+            }
+
+        }
+    }
+
+    private void ToggleAllSubLinks(int itemId, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            var candidates = AllAccessedLink.Where(m => m.ParentId == itemId || (m.Id == itemId)).ToList();
+
+            if (candidates != null)
+            {
+                foreach (var item in candidates)
+                {
+                    ToggleItem(item.Id, true);
+
+                    item.IsChecked = true;
+                }
+            }
+        }
+        else
+        {
+            var candidates = AllAccessedLink.Where(m => m.ParentId == itemId || (m.Id == itemId)).ToList();
+
+            if (candidates != null)
+            {
+                foreach (var item in candidates)
+                {
+                    ToggleItem(item.Id, false);
+
+                    item.IsChecked = false;
+                }
+            }
+        }
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(RoleViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+    public class CheckList
+    {
+        public CheckList()
+        {
+            Children = new List<CheckList>();
+        }
+
+        public int ParentId { get; set; }
+
+        public List<CheckList> Children { get; set; }
+    }
+
+
+}

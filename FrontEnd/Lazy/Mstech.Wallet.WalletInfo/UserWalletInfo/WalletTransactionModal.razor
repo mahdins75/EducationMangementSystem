@@ -1,0 +1,128 @@
+﻿@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@inject ITransactionService transactionService
+
+@inject NavigationManager NavigationManager
+
+@inject SweetAlertService SweetAlert
+
+<div class="modal @walletsModalDisplayClass fade show d-block " tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5); display:@walletsModalStyle;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تراکنش های کیف پول </h5>
+                <button type="button" class="btn btn-sm" @onclick="HideWalletModal"> <i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="content">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                </div>
+                                <div class="card-body">
+                                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@WalletList" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                                        <Columns>
+                                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionDateTimeText)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionDateTimeText))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.Amount)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.Amount))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionTypeTitle)" Filterable="false" Title="@GetDisplayName(nameof(TransactionViewModel.TransactionTypeTitle))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                                            <RadzenDataGridColumn TItem="TransactionViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                                <Template Context="data">
+                                                </Template>
+                                            </RadzenDataGridColumn>
+                                        </Columns>
+                                    </RadzenDataGrid>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" @onclick="HideWalletModal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+
+    [Parameter]
+    public RadzenDataGrid<TransactionViewModel> grid { get; set; }
+
+    List<TransactionViewModel> WalletList = new();
+
+
+    private string walletsModalDisplayClass = "";
+    private string walletsModalStyle = "none !important";
+    int count;
+    bool isLoading = false;
+
+
+    public int WalletId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+        StateHasChanged();
+    }
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        var query = await transactionService.GetAll(new TransactionViewModel() { WalletId = WalletId, PageSize = args.Top.Value, Skip = args.Skip.Value, IsPagination = true });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            WalletList = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            WalletList = new List<TransactionViewModel>(); // Empty list if data is null
+        }
+        if (query.Entity != null)
+        {
+            WalletList = query.Entity.ToList();
+
+        }
+
+        isLoading = false;
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(TransactionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+    public async Task OpenWalletTransactionsModal(WalletViewModel wallet)
+    {
+
+        WalletId = wallet.Id;
+        walletsModalDisplayClass = "show";
+        walletsModalStyle = "block";
+        StateHasChanged();
+    }
+
+    private void HideWalletModal()
+    {
+        walletsModalDisplayClass = "hide ";
+        walletsModalStyle = "none !important";
+        StateHasChanged();
+    }
+}

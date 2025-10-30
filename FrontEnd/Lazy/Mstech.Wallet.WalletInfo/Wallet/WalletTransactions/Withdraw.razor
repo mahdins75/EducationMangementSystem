@@ -1,0 +1,165 @@
+﻿@page "/WalletInfo/Wallet/WalletTransactions/Withdraw"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.Notification
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@using Mstech.Frontend.wallet.ViewModel.Wallet
+@inject ISMSService smsService;
+@inject ITransactionService transactionService;
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="modal @modalDisplayClass fade show d-block " tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5); display:@modalStyle;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">جابجایی میان برنامه ای</h5>
+                <button type="button" class="close" @onclick="HideEditModal" aria-label="بستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="WithdrawalViewModel" OnValidSubmit="@(() => CreateWithdrawal())">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <input type="hidden" @bind-value="TransactionRequestId" />
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <strong>موجودی کیف پول:</strong> @WalletBalance تومان
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        @if (showConfirmationCodeField)
+                        {
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">کد ارسال شده به شماره موبایل خورد را در این قسمت وارد کنید</label>
+                                    <RadzenTextBox @bind-Value="WithdrawalViewModel.ConfirmationCode" Name="confirmationCode" Style="width:100%;" />
+                                    <ValidationMessage For="@(() => WithdrawalViewModel.ConfirmationCode)" />
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-success" @onclick="ConfirmWithdrawal">تایید کد</button>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" disabled="@isProcessing" class="btn btn-primary">ارسال درخواست تسویه</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+    private bool showConfirmationCodeField = false;
+    private int TransactionRequestId;
+    [Parameter] public string WalletBalance { get; set; }
+    private WithdrawalViewModel WithdrawalViewModel { get; set; }
+    [Parameter] public int WalletId { get; set; }
+    [Parameter] public string CurrentUserName { get; set; }
+    [Parameter] public RadzenDataGrid<TransactionViewModel> grid { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TransactionRequestId = 0;
+        WithdrawalViewModel = new();
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(WalletClientViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+
+    public async Task OpenEditModal()
+    {
+
+        modalDisplayClass = "show";
+        modalStyle = "block";
+        StateHasChanged();
+    }
+
+    private void HideEditModal()
+    {
+        modalDisplayClass = "hide ";
+        modalStyle = "none !important";
+        StateHasChanged();
+    }
+
+    private async Task CreateWithdrawal()
+    {
+        var result = await smsService.SendWithDrawalConfirmation(new WithDrawConfirmationViewModel()
+        {
+            UserName = CurrentUserName,
+            WalletId = WalletId
+        });
+        if (result.IsSuccess && result.Entity != null)
+        {
+            TransactionRequestId = result.Entity.TransactionRequestId.Value;
+        }
+        showConfirmationCodeField = true;
+    }
+    private async Task ConfirmWithdrawal()
+    {
+        var result = await transactionService.WithDrawal(new WithDrawConfirmationViewModel()
+        {
+            UserName = CurrentUserName,
+            WalletId = WalletId
+        });
+
+        showConfirmationCodeField = true;
+    }
+
+    public async Task OpenWithDrawalModal()
+    {
+        modalDisplayClass = "show";
+        modalStyle = "block";
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,199 @@
+﻿@model CreateUserViewModel
+
+<!-- Create User Modal -->
+<div class="modal fade" id="modalCreateUser" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered modal-dialog-scrollable modal-lg" role="document">
+        <form class="form"
+              enctype="multipart/form-data"
+              method="post"
+              id="CreateUserForm"
+              asp-area="Admin"
+              asp-controller="User"
+              asp-action="Create"
+              data-ajax="true">
+
+            <input type="hidden" asp-for="Id" />
+
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title white" id="exampleModalCenterTitle">افزودن کاربر</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="بستن">
+                        <i class="bx bx-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-body">
+                        <div class="row">
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="Name"></label>
+                                    <input asp-for="Name" id="first-name-vertical" class="form-control" placeholder="نام">
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="LastName"></label>
+                                    <input asp-for="LastName" class="form-control" placeholder="نام خانوادگی">
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="Email"></label>
+                                    <input type="email" asp-for="Email" class="form-control" placeholder="ایمیل">
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="PhoneNumber"></label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="تلفن همراه">
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="PositionId"></label>
+                                    <select asp-for="PositionId" asp-items="Model.PositionList" class="form-control"></select>
+                                    <span asp-validation-for="PositionId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="IsActive"></label>
+                                    <select asp-for="IsActive" asp-items="Model.StatusList" class="form-control"></select>
+                                    <span asp-validation-for="IsActive" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="Password"></label>
+                                    <input asp-for="Password" class="form-control" placeholder="رمز عبور">
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label asp-for="ConfirmPassword"></label>
+                                    <input asp-for="ConfirmPassword" class="form-control" placeholder="تکرار رمز عبور">
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <fieldset class="pt-1">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" asp-for="IsHRMember" class="custom-control-input">
+                                        <label class="custom-control-label" for="IsHRMember">عضو تیم منابع انسانی</label>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                        <i class="bx bx-x d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">انصراف</span>
+                    </button>
+                    <button type="submit" class="btn btn-success ml-1">
+                        <i class="bx bx-check d-block d-sm-none"></i>
+                        <span class="d-none d-sm-block">ثبت</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $('#CreateUserForm').submit(function (e) {
+        e.preventDefault();
+        $(".loader-box").css("display", "block");
+        var action = $(this).attr('action');
+        var formData = new FormData($(this).get(0));
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: action,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data, status, settings) {
+                $(".loader-box").css("display", "none");
+                if (data.success) {
+                    toastr.success('افزودن کاربر با موفقیت انجام شد.', 'عملیات موفق', {
+                        rtl: true,
+                        positionClass: 'toast-bottom-right',
+                        containerId: 'toast-bottom-right'
+                    });
+                    reloadUserDataTable();
+                    resetCreateForm();
+                    $('#modalCreateUser').modal('toggle');
+                }
+                else {
+                    if (data.isValid) {
+                        toastr.error(data.message, 'اخطار!', {
+                            rtl: true,
+                            positionClass: 'toast-bottom-right',
+                            containerId: 'toast-bottom-right'
+                        });
+                    }
+                    else {
+                        displayValidationCreateErrors(data.errors);
+                    }
+                }
+            },
+            error: function (request, options, err) {
+                $(".loader-box").css("display", "none");
+                toastr.error('افزودن کاربر با خطا مواجه شد.', 'اخطار!', {
+                    rtl: true,
+                    positionClass: 'toast-bottom-right',
+                    containerId: 'toast-bottom-right'
+                });
+                console.log(request);
+            }
+        });
+        return true;
+    });
+
+    function displayValidationCreateErrors(errors) {
+
+        resetCreateValidation();
+
+        for (var i = 0; i < errors.length; i++) {
+            var error = errors[i];
+            var fieldName = error.property;
+            var errorMessage = error.errors;
+
+            var fieldErrorElement = $('#modalCreateUser [data-valmsg-for="' + fieldName + '"]');
+            fieldErrorElement.text(errorMessage);
+
+            fieldErrorElement.addClass('inputs-error');
+        }
+    }
+
+    function resetCreateForm() {
+
+        $('#CreateUserForm input[name=Name]').val('');
+        $('#CreateUserForm input[name=LastName]').val('');
+        $('#CreateUserForm input[name=Email]').val('');
+        $('#CreateUserForm input[name=Phone]').val('');
+        $('#CreateUserForm select[name=PositionId]').val('');
+        $('#CreateUserForm select[name=Status]').val('');
+        $('#CreateUserForm input[name=Password]').val('');
+        $('#CreateUserForm input[name=ConfirmPassword]').val('');
+    }
+
+    function resetCreateValidation() {
+
+        $('#modalCreateUser .text-danger').text('');
+        $('#modalCreateUser .text-danger').removeClass('inputs-error');
+    }
+
+</script>
+

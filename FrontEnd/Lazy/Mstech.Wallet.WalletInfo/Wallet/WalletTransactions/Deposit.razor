@@ -1,0 +1,169 @@
+﻿@page "/WalletInfo/Wallet/WalletTransactions/Deposit"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@using Mstech.Frontend.wallet.ViewModel.Wallet
+@inject IWalletClientService walletClientService
+@inject IPaymentRequest paymentRequest;
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="modal @modalDisplayClass fade show d-block " tabindex="-1" role="dialog"
+     style="background-color: rgba(0, 0, 0, 0.5); display:@modalStyle;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">افزایش اعتبار کیف پول</h5>
+                <button type="button" class="close" @onclick="HideEditModal" aria-label="بستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="DepositModel" OnValidSubmit="@(() => CreateTransaction())">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="row">
+                        <!-- Title Input -->
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(TransactionViewModel.Amount))</label>
+                            <InputNumber class="form-control" @bind-Value="DepositModel.Amount" step="0.01" />
+                            <ValidationMessage For="@(() => DepositModel.Amount)" />
+                        </div>
+                        <!-- Owner Full Name Input -->
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(TransactionViewModel.Description))</label>
+                            <InputText class="form-control" @bind-Value="DepositModel.Description" />
+                            <ValidationMessage For="@(() => DepositModel.Description)" />
+                        </div>
+
+                    </div>
+                    <!-- Save Button -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                                انتقال به درگاه
+                                پرداخت
+                            </button>
+                            <button type="button" @onclick="HideEditModal" class="btn btn-danger" aria-label="انصراف">
+                                بستن
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+    private DepositViewModel DepositModel { get; set; }
+
+    [Parameter] public RadzenDataGrid<TransactionViewModel> grid { get; set; }
+    [Parameter] public int WalletId { get; set; }
+    [Parameter] public string CurrentUserName { get; set; }
+
+    // Other properties and methods
+
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        DepositModel = new();
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(TransactionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+    public async Task OpenDepositModal()
+    {
+        modalDisplayClass = "show";
+        modalStyle = "block";
+        StateHasChanged();
+    }
+
+    async Task CreateTransaction()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var gatewayResult = await paymentRequest.CreateGatewayRequest(new TransactionViewModel()
+        {
+            Amount = DepositModel.Amount,
+            Description = DepositModel.Description,
+            WalletId = WalletId,
+            WalletOwnerUserName = CurrentUserName,
+            TransactionType = TransactionType.Charge,
+            WalletTransactionCalculationType = WalletTransactionCalculationType.Deposit,
+            IsWalletValue = true
+        });
+
+        if (!gatewayResult.IsSuccess || gatewayResult.Entity == null)
+        {
+            // Handle the case where the request was not successful or entity is null
+            // For example, you could log an error, show an error message to the user, etc.
+            Console.WriteLine("Transaction was not successful or entity is null.");
+            // Additional error handling code here
+        }
+        else
+        {
+            // Handle the successful case
+            // For example, you could update the UI, log the success, etc.
+            Console.WriteLine("Transaction was successful.");
+            // Additional success handling code here
+        }
+
+        HideEditModal();
+        await grid.Reload();
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private void HideEditModal()
+    {
+        modalDisplayClass = "hide ";
+        modalStyle = "none !important";
+        StateHasChanged();
+    }
+
+
+}

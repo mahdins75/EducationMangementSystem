@@ -1,0 +1,165 @@
+﻿@page "/WalletInfo/WalletClient/create"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@inject IWalletClientService walletClientService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        افزودن مشترک
+    </div>
+    <div class="card-body">
+        <EditForm Model="newWalletClient" OnValidSubmit="@(() => AddWalletClient())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="row">
+                <!-- Title Input -->
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(WalletClientViewModel.Title))</label>
+                    <input class="form-control" @bind="newWalletClient.Title" />
+                </div>
+                <!-- Owner Full Name Input -->
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(WalletClientViewModel.ActivationStatus))</label>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="" class="">
+                        <RadzenLabel Component="DropDownFiltering" />
+                        <RadzenDropDown @ref=@statusDropDown
+                                        AllowFiltering="true"
+                                        Data=@statusDropDownData
+                                        TextProperty="Title"
+                                        ValueProperty="Value"
+                                        @bind-Value="newWalletClient.ActivationStatus"
+                                        Style="width: 100%; max-width: 400px;"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        FilterOperator="StringFilterOperator.StartsWith"
+                                        AllowClear="true"
+                                        Name="ActivationStatus" />
+                    </RadzenStack>
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(WalletClientViewModel.OwnerId))</label>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="" class="">
+                        <RadzenLabel Component="DropDownFiltering" />
+                        <RadzenDropDown @ref=@ownerDropDown
+                                        AllowFiltering="true"
+                                        Data=@ownerDropDownData
+                                        TextProperty="Title"
+                                        ValueProperty="Value"
+                                        @bind-Value="newWalletClient.OwnerId"
+                                        Style="width: 100%; max-width: 400px;"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        FilterOperator="StringFilterOperator.StartsWith"
+                                        AllowClear="true"
+                                        Name="OwnerId" />
+                    </RadzenStack>
+                </div>
+
+
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">افزودن</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+
+    RadzenDropDown<int> statusDropDown = new();
+
+    RadzenDropDown<string> ownerDropDown = new();
+
+    List<WalletClientViewModel> WalletClients = new();
+
+    [Parameter]
+    public WalletClientViewModel newWalletClient { get; set; }
+
+    [Parameter]
+    public List<SelectListItem> statusDropDownData { get; set; }
+
+    [Parameter]
+    public List<SelectListItemStringValue> ownerDropDownData { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<WalletClientViewModel> grid { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        newWalletClient = new();
+        statusDropDownData = new();
+        ownerDropDownData = new();
+        StateHasChanged();
+    }
+    async Task AddWalletClient()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await walletClientService.Create(new WalletClientViewModel
+            {
+                Title = newWalletClient.Title,
+                OwnerId = newWalletClient.OwnerId,
+                ActivationStatus = newWalletClient.ActivationStatus
+            });
+        newWalletClient = new WalletClientViewModel();
+
+        await grid.Reload();
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(WalletClientViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+
+
+
+
+}

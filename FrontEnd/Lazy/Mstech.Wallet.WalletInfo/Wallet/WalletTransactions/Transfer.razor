@@ -1,0 +1,215 @@
+﻿@page "/WalletInfo/Wallet/WalletTransactions/Transfer"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@using Mstech.Frontend.wallet.ViewModel.ViewModel.Wallet
+@inject IWalletClientService walletClientService
+@inject ITransactionService transactionService;
+@inject IUserService userService;
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="modal @modalDisplayClass fade show d-block " tabindex="-1" role="dialog"
+     style="background-color: rgba(0, 0, 0, 0.5); display:@modalStyle;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">جابجایی میان برنامه ای</h5>
+                <button type="button" class="close" @onclick="HideEditModal" aria-label="بستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="TransferModel" OnValidSubmit="@(() => CreateTransfer())">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="row">
+                        <!-- Title Input -->
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(TransferTransactionViewModel.Amount), nameof(TransferTransactionViewModel))</label>
+                            <InputNumber class="form-control" @bind-Value="TransferModel.Amount" step="0.01" />
+                            <ValidationMessage For="@(() => TransferModel.Amount)" />
+                        </div>
+                        <!-- Owner Full Name Input -->
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(TransferTransactionViewModel.Description), nameof(TransferTransactionViewModel))</label>
+                            <InputText class="form-control" @bind-Value="TransferModel.Description" />
+                            <ValidationMessage For="@(() => TransferModel.Description)" />
+                        </div>
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(TransferTransactionViewModel.RecieverWalletUserName), nameof(TransferTransactionViewModel))</label>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                         JustifyContent="JustifyContent.Center" Gap="" class="">
+                                <RadzenLabel Component="DropDownFiltering" />
+                                <RadzenDropDown @ref=@UserDropDown
+                                                AllowFiltering="true"
+                                                Data=@UserDropDownData
+                                                TextProperty="Title"
+                                                ValueProperty="Value"
+                                                @bind-Value="TransferModel.UserName"
+                                                Style="width: 100%; max-width: 400px;"
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                FilterOperator="StringFilterOperator.StartsWith"
+                                                AllowClear="true"
+                                                Name="ClientApiId" />
+                            </RadzenStack>
+                        </div>
+                    </div>
+                    <!-- Save Button -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                                انتقال
+                            </button>
+                            <button type="button" @onclick="HideEditModal" class="btn btn-danger" aria-label="انصراف">
+                                بستن
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+    RadzenDropDown<string> UserDropDown = new();
+
+    [Parameter] public int WalletId { get; set; }
+
+
+    private TransferViewModel TransferModel { get; set; } = new();
+
+
+    [Parameter] public List<SelectListItemStringValue> UserDropDownData { get; set; }
+
+    [Parameter] public RadzenDataGrid<TransactionViewModel> grid { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserDropDown = new();
+        UserDropDownData = new();
+
+        var getAllOfMyClients = await transactionService.GetAllOfMyUsers(new TransactionViewModel()
+            {
+                Wallet = new WalletViewModel() { },
+            });
+
+        if (getAllOfMyClients.IsSuccess)
+        {
+            UserDropDownData = getAllOfMyClients.Entity.Select(x => new SelectListItemStringValue() { Title = x.FullName, Value = x.UserName }).ToList();
+        }
+
+        if (!getAllOfMyClients.IsSuccess)
+        {
+            if ((getAllOfMyClients.ErrorCode != null && getAllOfMyClients.ErrorCode == "Unauthorized"))
+            {
+                NavigationManager.NavigateTo("");
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", getAllOfMyClients.Message, "error");
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName, string modelName)
+    {
+        if (modelName == "TransferTransactionViewModel")
+        {
+            var prop = typeof(TransferTransactionViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+
+            return propertyName;
+        }
+        else if (modelName == "WalletClientViewModel")
+        {
+            var prop = typeof(WalletClientViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+
+            return propertyName;
+        }
+
+        return "";
+    }
+
+
+    private async Task CreateTransfer()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await transactionService.Transfer(new TransferTransactionViewModel()
+            {
+                Amount = TransferModel.Amount,
+                Description = TransferModel.Description,
+                SenderWalletId = WalletId,
+                RecieverWalletUserName = TransferModel.UserName,
+            });
+
+        HideEditModal();
+        await grid.Reload();
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    public async Task OpenTransferModal()
+    {
+        modalDisplayClass = "show";
+        modalStyle = "block";
+        StateHasChanged();
+    }
+
+    private void HideEditModal()
+    {
+        modalDisplayClass = "hide ";
+        modalStyle = "none !important";
+        StateHasChanged();
+    }
+
+
+}

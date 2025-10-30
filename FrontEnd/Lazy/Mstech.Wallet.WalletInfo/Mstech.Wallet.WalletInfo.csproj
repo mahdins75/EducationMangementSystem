@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <UseBlazorWebAssembly>true</UseBlazorWebAssembly>
+
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.Typeahead" Version="4.7.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+    <PackageReference Include="Radzen.Blazor" Version="5.2.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Mstech.Frontend.Wallet.Servies\Mstech.Frontend.Wallet.Service.csproj" />
+    <ProjectReference Include="..\..\Mstech.Frontend.wallet.ViewModel\Mstech.Frontend.Wallet.ViewModel.csproj" />
+    <ProjectReference Include="..\Mstech.Wallet.Components\Mstech.Wallet.Components.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="WalletClient\Create.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
+</Project>

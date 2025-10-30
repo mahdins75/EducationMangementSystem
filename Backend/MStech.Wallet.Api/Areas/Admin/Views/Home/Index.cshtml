@@ -1,0 +1,155 @@
+﻿@using Mstech.ViewModel.DTO;
+@model ConfirmEmailNumberViewModel
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewData["Title"] = "پنل مدیریت";
+}
+
+@section secHead {
+    <link rel="stylesheet" type="text/css" href="~/assets/vendors/css/forms/select/select2.min.css">
+}
+
+<div class="row">
+    <div class="col-sm-3 col-12 dashboard-users-success">
+        <div class="card text-center">
+        <div class="card-content">
+            <div class="card-body py-1">
+            <div class="badge-circle badge-circle-lg badge-circle-light-success mx-auto my-75">
+                <i class="bx bx-user font-medium-5"></i>
+            </div>
+            <div class="text-muted line-ellipsis line-height-2 mb-50">متقاضیان</div>
+            <h3 class="line-height-1 mb-50 primary-font">0</h3>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="col-sm-3 col-12 dashboard-users-secondary">
+        <div class="card text-center">
+        <div class="card-content">
+            <div class="card-body py-1">
+            <div class="badge-circle badge-circle-lg badge-circle-light-secondary mx-auto my-75">
+                <i class="bx bx-briefcase font-medium-5"></i>
+            </div>
+            <div class="text-muted line-ellipsis line-height-2 mb-50">شغل ها</div>
+            <h3 class="line-height-1 mb-50 primary-font">0</h3>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="col-sm-3 col-12 dashboard-users-primary">
+        <div class="card text-center">
+        <div class="card-content">
+            <div class="card-body py-1">
+            <div class="badge-circle badge-circle-lg badge-circle-light-primary mx-auto my-75">
+                <i class="bx bx-folder font-medium-5"></i>
+            </div>
+            <div class="text-muted line-ellipsis line-height-2 mb-50">پوشه ها</div>
+            <h3 class="line-height-1 mb-50 primary-font">0</h3>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="col-sm-3 col-12 dashboard-users-info">
+        <div class="card text-center">
+        <div class="card-content">
+            <div class="card-body py-1">
+            <div class="badge-circle badge-circle-lg badge-circle-light-info mx-auto my-75">
+                <i class="bx bx-group font-medium-5"></i>
+            </div>
+            <div class="text-muted line-ellipsis line-height-2 mb-50">اعضای تیم</div>
+            <h3 class="line-height-1 mb-50 primary-font">0</h3>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <div class="form-group mb-0" style="width: 50%;">
+                    <select class="form-control select2" data-val="true" id="IsActive" name="IsActive">
+                        <option selected="selected" value="true">شغل: اوپراتور تراشکار</option>
+                        <option value="false">شغل: خدمات</option>
+                    </select>
+                    <span class="text-danger field-validation-valid" data-valmsg-for="IsActive" data-valmsg-replace="true"></span>
+                </div>
+
+                <div class="heading-elements" style="margin-top: 7px;">
+                    <button type="button" class="btn btn-outline-primary btn-sm">
+                        <span class="align-middle ml-25">خانه</span>
+                        <i class='bx bx-chevron-left'></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="timeline-container">
+                    <ul>
+                        <li class="timeline-li">
+                            <div>
+                                <h4>6</h4>
+                                <hr />
+                                <h6>منتظر بررسی</h6> 
+                            </div>
+                            <div class="timeline-dot"></div>
+                        </li>
+
+                        <li class="timeline-li">
+                            <div>
+                                <h4>2</h4>
+                                <hr />
+                                <h6>کاندید مصاحبه تلفنی</h6> 
+                            </div>
+                            <div class="timeline-dot"></div>
+                        </li>
+
+                        <li class="timeline-li">
+                            <div>
+                                <h4>0</h4>
+                                <hr />
+                                <h6>کاندید مصاحبه حضوری</h6> 
+                            </div>
+                            <div class="timeline-dot"></div>
+                        </li>
+
+                        <li class="timeline-li">
+                            <div>
+                                <h4>12</h4>
+                                <hr />
+                                <h6>کاندید بررسی نهایی</h6> 
+                            </div>
+                            <div class="timeline-dot"></div>
+                        </li>
+
+                        <li class="timeline-li">
+                            <div>
+                                <h4>0</h4>
+                                <hr />
+                                <h6>کاندید استخدام</h6> 
+                            </div>
+                            <div class="timeline-dot"></div>
+                        </li>
+
+                        <li class="timeline-li">
+                            <div>
+                                <h4>1</h4>
+                                <hr />
+                                <h6>مصاحبه منابع انسانی</h6> 
+                            </div>
+                            <div class="timeline-dot">
+                                <span></span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/assets/vendors/js/forms/select/select2.full.min.js"></script>
+    <script src="~/assets/js/scripts/forms/select/form-select2.js"></script>
+}

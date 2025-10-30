@@ -1,0 +1,146 @@
+﻿@page "/Membership/Role/Index"
+
+@inject IRoleService roleService
+@inject IJSRuntime JS
+@inject IDynamicTitleService dynamicTitleService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+<div class="content">
+    <div class="row">
+        <div class="col-12">
+
+            <Create grid="grid" />
+
+            <div class="card">
+                <div class="card-header">
+                    لیست سطوح دسترسی سیستم
+                </div>
+                <div class="card-body">
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@Roles" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(RoleViewModel.Name)" Filterable="false" Title="@GetDisplayName(nameof(RoleViewModel.Name))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(RoleViewModel.PersianName)" Filterable="false" Title="@GetDisplayName(nameof(RoleViewModel.PersianName))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="RoleViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    <button class="btn  btn-sm btn" @onclick="() => OpenEditModal(data)"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="btn btn-sm btn" @onclick="() => OpenDeleteConfirmationModal(data)"><i class="fa-regular fa-trash"></i></button>
+                                    <button class="btn btn-sm btn" @onclick="() => GotoRoleAccessedLinked(data)"><i class="fa-regular fa-list"></i></button>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<Edit @ref="editComponentRef" grid="grid" />
+
+@code {
+
+    RadzenDataGrid<RoleViewModel> grid = new();
+    List<RoleViewModel> Roles = new();
+
+    private Edit editComponentRef { get; set; }
+    private string modalDisplayClass = "";
+    private string modalStyle = "none !important";
+    int count;
+    bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        var pageTitle = await dynamicTitleService.GetPageTitle("Role");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        StateHasChanged();
+    }
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        var query = await roleService.GetAll(new RoleViewModel() { PageSize = args.Top.Value, Skip = args.Skip.Value, IsPagination = true });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            Roles = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            Roles = new List<RoleViewModel>(); // Empty list if data is null
+        }
+        if (query.Entity != null)
+        {
+            Roles = query.Entity.ToList();
+
+        }
+
+        isLoading = false;
+    }
+
+    private async Task OpenEditModal(RoleViewModel RoleUser)
+    {
+
+        await editComponentRef.OpenEditModal(RoleUser);
+        StateHasChanged();
+    }
+
+
+
+    private async void OpenDeleteConfirmationModal(RoleViewModel RoleUserModel)
+    {
+        var result = await SweetAlert.ShowConfirmation("عملیات حذف", $"آیا میخواهید {RoleUserModel.Name} را حذف کنید؟");
+        if (result == true)
+        {
+            var deleteResult = await roleService.Delete(new RoleViewModel() { Id = RoleUserModel.Id });
+            if (!deleteResult.IsSuccess)
+            {
+                if ((deleteResult.ErrorCode != null && deleteResult.ErrorCode == "Unauthorized") || (deleteResult.ErrorCode != null && deleteResult.ErrorCode == "Forbiden"))
+                {
+                    NavigationManager.NavigateTo("");
+
+                }
+                else
+                {
+                    await SweetAlert.ShowAlert("خطا !", deleteResult.Message, "error");
+
+                }
+
+            }
+        }
+        await grid.Reload();
+        StateHasChanged();
+    }
+
+    private void GotoRoleAccessedLinked(RoleViewModel RoleUserModel)
+    {
+        NavigationManager.NavigateTo("/Membership/Role/RoleAccessedLink?roleId=" + RoleUserModel.Id);
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(RoleViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+
+}

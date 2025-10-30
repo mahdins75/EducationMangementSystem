@@ -1,0 +1,193 @@
+﻿@page "/WalletInfo/Wallet/UserWalletInfo"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using System.Globalization
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@inject IWalletService walletService;
+@inject IWalletClientService IWalletClientService;
+@inject ITransactionService transactionService;
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h4></h4>
+            <div class="d-flex align-items-center">
+                <span class="me-2">USD</span>
+                <h2 class="mb-0">0</h2>
+            </div>
+        </div>
+        <div class="col-12 d-flex mb-4">
+            <button class="btn btn-primary me-2" @onclick='() => SetActiveTab("deposit")'>کیف پول های من </button>
+            <button class="btn btn-outline-primary me-2" @onclick='() => SetActiveTab("transfer")'>آخرین تراکنش ها</button>
+            @* <button class="btn btn-outline-primary" @onclick='() => SetActiveTab("withdraw")'>Withdraw</button> *@
+            <div class="ms-auto">
+                <button class="btn btn-outline-secondary me-2">کیف پول ها</button>
+                <button class="btn btn-outline-secondary">تراکنش ها</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">کیف پول های من </h5>
+        </div>
+        <div class="card-body">
+
+            @if (activeTab == "deposit")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        لیست زیر مجموعه ها
+                    </div>
+                    <div class="card-body">
+                        <!-- Radzen Grid -->
+                        <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@Wallets" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                            <Columns>
+                                <RadzenDataGridColumn Property="@nameof(WalletViewModel.ClientName)" Filterable="false" Title="@GetDisplayName(nameof(WalletViewModel.ClientName))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                                <RadzenDataGridColumn Property="@nameof(WalletViewModel.WalletTypeTitle)" Filterable="false" Title="@GetDisplayName(nameof(WalletViewModel.WalletTypeTitle))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                                <RadzenDataGridColumn Property="@nameof(WalletViewModel.Balance)" Filterable="false" Title="@GetDisplayName(nameof(WalletViewModel.Balance))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                                <RadzenDataGridColumn TItem="WalletViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                    <Template Context="data">
+                                        <a class="btn  btn-sm " @onclick="(() => NvigateToTransactionDetail(data))"><i class="">گزارش</i></a>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                </div>
+
+            }
+            else if (activeTab == "transfer")
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">نام سایت</th>
+                            <th scope="col">شرح تراکنش</th>
+                            <th scope="col">مبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Transactions != null)
+                        {
+                            foreach (var item in Transactions)
+                            {
+                                <tr class="cursor-pointer">
+                                    <td>@item.Wallet.ClientName</td>
+                                    <td>@item.TransactionTypeTitle</td>
+                                    <td>@item.Amount</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+    RadzenDataGrid<WalletViewModel> grid = new();
+
+    private string activeTab = "deposit";
+
+    private List<WalletViewModel> Wallets { get; set; }
+
+    private List<TransactionViewModel> Transactions { get; set; }
+
+    private WalletTransactionModal walletTransactionsRef { get; set; }
+
+    bool isLoading = false;
+    private bool isProcessing = false;
+    int count;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Wallets = new List<WalletViewModel>();
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        Transactions = new List<TransactionViewModel>();
+
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+        isProcessing = true;
+        StateHasChanged();
+
+        await Task.Yield();
+
+        var walletResult = await walletService.GetAllForCurrentUser(new WalletViewModel() { WalletType=WalletType.Purchase});
+
+        if (walletResult?.Entity != null)
+        {
+            count = walletResult.QueryCount;
+            Wallets = walletResult.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            Wallets = new List<WalletViewModel>(); // Empty list if data is null
+        }
+        if (walletResult.Entity != null)
+        {
+            Wallets = walletResult.Entity.ToList();
+
+        }
+
+        isLoading = false;
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    protected async Task GetTransactions(int walletId)
+    {
+        var Transactions = await transactionService.GetAll(new TransactionViewModel() { WalletId = walletId, IsPagination = true, PageSize = 10 });
+    }
+
+    private async Task OpenWalletTransactionsModal(WalletViewModel model)
+    {
+        await walletTransactionsRef.OpenWalletTransactionsModal(model);
+    }
+
+    private async Task NvigateToTransactionDetail(WalletViewModel model)
+    {
+        NavigationManager.NavigateTo("/WalletInfo/UserWalletInfo/WalletTransactions?walletId=" + model.Id);
+    }
+    private void SetActiveTab(string tabName)
+    {
+        activeTab = tabName;
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(TransactionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+}

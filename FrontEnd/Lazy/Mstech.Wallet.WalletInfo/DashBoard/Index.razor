@@ -1,0 +1,188 @@
+﻿@page "/WalletInfo/Wallet/DashBoard"
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@inject IDashboardService dashboardService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="custom-box">
+                <h4>تعداد رفرال کد های فعال</h4>
+                <div class="referral-grid">
+                    @if (ReferralCodes.Any())
+                    {
+                        foreach (var item in ReferralCodes)
+                        {
+                            <div class="referral-header">
+                                <div>@item.ClientName</div>
+                                <div>@item.WalletType</div>
+                                <div>@item.ReferralCode</div>
+                            </div>
+
+                        }
+                    }
+
+                    <!-- Additional rows as needed -->
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="custom-box">
+                <h4 class="wallet-title">مجموع موجودی کیف پول</h4>
+                @if (DashboardWaleltsBalences != null)
+                {
+                    <p class="wallet-balance">@DashboardWaleltsBalences.Balance تومان</p> <!-- Example balance -->
+                }
+                else
+                {
+                    <p class="wallet-balance">0 تومان</p> <!-- Example balance -->
+                }
+                <p class="wallet-subtext">مجموع کل موجودی های کیف پول شما</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="custom-box">
+                شانس های افزایش موجودی: بازی آنلاین یا ماموریت های آنلاین با هدف جذب و بازاریابی
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="custom-box">
+                <h4>دسترسی سریع به سایت‌ها</h4>
+                <div class="site-access-grid">
+                    <div class="site-access-grid-header">
+                        <div>نام اپلیکیشن</div>
+                        <div>لینک سایت</div>
+                    </div>
+                    <div class="site-access-grid-body">
+                        @if (ClientAccessLinks.Any())
+                        {
+                            foreach (var item in ClientAccessLinks)
+                            {
+                                <div class="site-access-grid-row">
+                                    <div>@item.CLientName</div>
+                                    <div><a href="@item.Link" target="_blank">@item.CLientName</a></div>
+                                </div>
+                            }
+                        }
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="custom-box">
+                <h4>جدول حساب‌ها</h4>
+                <div class="account-table-grid">
+                    <div class="account-table-header">
+                        <div>نام پلتفرم</div>
+                        <div>وضعیت حساب</div>
+                        <div>موجودی حساب</div>
+                        <div>میزان افزایش/کاهش</div>
+                    </div>
+                    <div class="account-table-body">
+                        @if (WalletInfos.Any())
+                        {
+                            foreach (var item in WalletInfos)
+                            {
+                                <div class="account-table-row">
+                                    <div>@item.ClientName</div>
+                                    <div>@item.BalanceStatus</div>
+                                    <div>@item.Balence تومان</div>
+                                    <div>@item.LastTransactionValue تومان</div>
+                                </div>
+                            }
+                        }
+                        @* <div class="account-table-row">
+                        <div>تراپیس</div>
+                        <div>مثبت</div>
+                        <div>1,000,000 تومان</div>
+                        <div>+50,000 تومان</div>
+                        </div>
+                        <div class="account-table-row">
+                        <div>فروشگاه</div>
+                        <div>منفی</div>
+                        <div>500,000 تومان</div>
+                        <div>-30,000 تومان</div>
+                        </div>
+                        <div class="account-table-row">
+                        <div>سایر</div>
+                        <div>سررسید بدهی</div>
+                        <div>200,000 تومان</div>
+                        <div>+10,000 تومان</div>
+                        </div> *@
+                        <!-- Add more rows as needed -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="custom-box ad-banner">
+                بنر تبلیغ
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    DsahboardWaleltsBalenceViewModel DashboardWaleltsBalences = new();
+
+    List<ClientAccessLinkViewModel> ClientAccessLinks { get; set; } = new();
+
+    List<ReferralCodeViewModel> ReferralCodes { get; set; } = new();
+
+    List<WalletInfoViewModel> WalletInfos { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await dashboardService.GetAll();
+
+        if (result.IsSuccess)
+        {
+            DashboardWaleltsBalences = result.Entity.DashboardWaleltsBalences;
+
+            ClientAccessLinks = result.Entity.ClientAccessLinks;
+
+            ReferralCodes = result.Entity.ReferralCodes;
+
+            WalletInfos = result.Entity.WalletInfos;
+            StateHasChanged();
+
+        }
+
+    }
+
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(WalletViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName;
+    }
+
+
+
+
+
+}

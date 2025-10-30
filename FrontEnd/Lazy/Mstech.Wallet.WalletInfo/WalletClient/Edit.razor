@@ -1,0 +1,194 @@
+﻿@page "/WalletInfo/WalletClient/Edit"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@inject IWalletClientService walletClientService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="modal @modalDisplayClass fade show d-block " tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5); display:@modalStyle;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Wallet Client</h5>
+                <button type="button" class="close" @onclick="HideEditModal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input type="hidden" @bind="editWalletClient.Id" />
+                    <div class="row">
+                        <!-- Title Input -->
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(WalletClientViewModel.Title))</label>
+                            <input class="form-control" @bind="editWalletClient.Title" />
+                        </div>
+                        <!-- Owner Full Name Input -->
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(WalletClientViewModel.ActivationStatus))</label>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="" class="">
+                                <RadzenLabel Component="DropDownFiltering" />
+                                <RadzenDropDown @ref=@statusDropDown
+                                                AllowFiltering="true"
+                                                Data=@statusDropDownData
+                                                TextProperty="Title"
+                                                ValueProperty="Value"
+                                                @bind-Value="editWalletClient.ActivationStatus"
+                                                Style="width: 100%; max-width: 400px;"
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                FilterOperator="StringFilterOperator.StartsWith"
+                                                AllowClear="true"
+                                                Name="ActivationStatus" />
+                            </RadzenStack>
+                        </div>
+                        <div class="col-md-3">
+                            <label>@GetDisplayName(nameof(WalletClientViewModel.OwnerId))</label>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="" class="">
+                                <RadzenLabel Component="DropDownFiltering" />
+                                <RadzenDropDown @ref=@ownerDropDown
+                                                AllowFiltering="true"
+                                                Data=@ownerDropDownData
+                                                TextProperty="Title"
+                                                ValueProperty="Value"
+                                                @bind-Value="editWalletClient.OwnerId"
+                                                Style="width: 100%; max-width: 400px;"
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                FilterOperator="StringFilterOperator.StartsWith"
+                                                AllowClear="true"
+                                                Name="OwnerId" />
+                            </RadzenStack>
+                        </div>
+
+
+                    </div>
+                    <!-- Save Button -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="button" disabled="@isProcessing" class="btn btn-primary" @onclick="EditWalletClient">ذخیره تغییرات</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+    RadzenDropDown<int> statusDropDown = new();
+
+    RadzenDropDown<string> ownerDropDown = new();
+
+
+    private WalletClientViewModel editWalletClient { get; set; }
+
+    [Parameter]
+    public List<SelectListItem> statusDropDownData { get; set; }
+
+    [Parameter]
+    public List<SelectListItemStringValue> ownerDropDownData { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<WalletClientViewModel> grid { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        editWalletClient = new();
+        statusDropDownData = new();
+        ownerDropDownData = new();
+        var adasd = statusDropDownData;
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(WalletClientViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+    async Task<WalletClientViewModel> LoadSingleForEdit(int id)
+    {
+
+        var query = await walletClientService.GetAll(new WalletClientViewModel() { Id = id, IsPagination = false });
+
+        if (query?.Entity != null)
+        {
+            return query.Entity.FirstOrDefault();
+        }
+        else
+        {
+            return new WalletClientViewModel();
+        }
+    }
+    public async Task OpenEditModal(WalletClientViewModel walletClient)
+    {
+
+        editWalletClient = await LoadSingleForEdit(walletClient.Id);
+        modalDisplayClass = "show";
+        modalStyle = "block";
+        StateHasChanged();
+    }
+    async Task EditWalletClient()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await walletClientService.Update(new WalletClientViewModel
+            {
+                Id = editWalletClient.Id,
+                Title = editWalletClient.Title,
+                OwnerId = editWalletClient.OwnerId,
+                ActivationStatus = editWalletClient.ActivationStatus
+            });
+        HideEditModal();
+        await grid.Reload();
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private void HideEditModal()
+    {
+        modalDisplayClass = "hide ";
+        modalStyle = "none !important";
+        StateHasChanged();
+    }
+
+
+
+}

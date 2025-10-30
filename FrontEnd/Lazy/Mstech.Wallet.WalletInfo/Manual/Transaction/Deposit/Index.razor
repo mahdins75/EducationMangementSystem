@@ -1,0 +1,588 @@
+﻿@page "/WalletInfo/Manual/Transaction/Deposit/Index"
+@inject SweetAlertService SweetAlert
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@using Mstech.Frontend.wallet.ViewModel.Wallet
+@using Newtonsoft.Json
+@using Radzen.Blazor @* Added for Radzen components *@
+@using Radzen @* Added for Radzen components *@
+
+@inject IJSRuntime JS
+@inject ITransactionService transactionService
+@inject IWalletClientService walletClientService
+@inject IWalletService walletService
+@inject IUserService userService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+
+<style>
+    /* Custom styles for the loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* Ensure it's on top of other content */
+    }
+
+    .loading-text {
+        margin-top: 15px;
+        font-size: 1.2em;
+        color: #333;
+    }
+
+    /* Adjust Radzen Dropdown styling to match Bootstrap form-control */
+    .rz-dropdown {
+        width: 100%; /* Ensure Radzen dropdowns take full width of their column */
+    }
+
+    /* General padding for the content area */
+    .content {
+        padding: 1.5rem; /* Increased padding for better spacing */
+    }
+
+    /* Style for the table within the card */
+    .card-body .table {
+        margin-bottom: 0; /* Remove default table margin if it causes issues */
+    }
+
+    /* Specific styling for table cells to ensure proper alignment and spacing */
+    .form-table th,
+    .form-table td {
+        padding: 0.75rem; /* Standard table cell padding */
+        vertical-align: middle; /* Vertically align content in cells */
+        white-space: nowrap; /* Prevent text wrapping to force horizontal scrolling */
+    }
+
+    .form-table th {
+        font-weight: bold; /* Make labels bold */
+        /* width: 25%; Removed for dynamic width */
+        text-align: right; /* Align labels to the right */
+    }
+
+    .form-table td {
+        /* width: 75%; Removed for dynamic width */
+        text-align: left; /* Align inputs to the left */
+    }
+
+    /* Ensure form controls within table cells take full available width, but respect max-width */
+    .form-table .form-control,
+    .form-table .rz-dropdown,
+    .form-table .rz-inputtext {
+        width: 100%;
+        max-width: 400px; /* Limit max width for inputs for better aesthetics */
+    }
+
+    /* Validation messages should also be block level and aligned */
+    .validation-message {
+        display: block;
+        text-align: left; /* Align validation messages to the left under inputs */
+        color: var(--bs-danger); /* Use Bootstrap danger color for errors */
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+
+    /* Responsive adjustments for smaller screens */
+    @@media (max-width: 767.98px) {
+        .form-table th,
+        .form-table td {
+            display: block; /* Stack table headers and data cells on small screens */
+            width: 100%; /* Take full width */
+            padding-left: 0.5rem; /* Adjust padding for small screens */
+            padding-right: 0.5rem;
+            text-align: right; /* Align labels to right */
+        }
+
+        .form-table th {
+            padding-bottom: 0.25rem;
+        }
+
+        .form-table td {
+            padding-top: 0.25rem;
+            padding-bottom: 0.5rem; /* Smaller bottom padding on mobile */
+            text-align: left; /* Align inputs to left when stacked */
+        }
+
+        .form-table .form-control,
+        .form-table .rz-dropdown,
+        .form-table .rz-inputtext {
+            max-width: 100%; /* Allow full width on small screens */
+            margin-left: 0; /* Remove centering on mobile */
+            margin-right: 0;
+        }
+    }
+</style>
+
+<div class="content m-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <span class="font-weight-bold">صدور سند دستی</span>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="DepositModel" OnValidSubmit="@(() => CreateTransaction())">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="table-responsive">
+                            @* Added table-responsive wrapper here *@
+                            <table class="table table-bordered form-table">
+                                <thead>
+                                    @* Added thead section *@
+                                    <tr>
+                                        <th>@GetDisplayName(nameof(DepositViewModel.Amount))</th> @* Column header for labels *@
+                                        <th>@GetDisplayName(nameof(DepositViewModel.ClientId))</th>
+                                        <th>@GetDisplayName(nameof(DepositViewModel.UserName))</th>
+                                        <th>@GetDisplayName(nameof(DepositViewModel.InvoiceId))</th>
+                                        <th>@GetDisplayName(nameof(DepositViewModel.Description))</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            @* Amount Field - Input in its own cell *@
+                                            <InputNumber class="form-control" @bind-Value="DepositModel.Amount" step="0.01" />
+                                            <ValidationMessage For="@(() => DepositModel.Amount)" />
+                                        </td>
+                                        <td>
+                                            @* ClientId Field - Input in its own cell *@
+                                            <RadzenDropDown @ref=@MyClientsDropDown
+                                                            AllowFiltering="true"
+                                                            Data=@MyClientsDropDownData
+                                                            TextProperty="Title"
+                                                            ValueProperty="Value"
+                                                            @bind-Value="DepositModel.ClientId"
+                                                            Style="width: 100%;"
+                                                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                            FilterOperator="StringFilterOperator.StartsWith"
+                                                            AllowClear="true"
+                                                            Name="ClientId"
+                                                            Change="@OnClientChange" />
+                                            <ValidationMessage For="@(() => DepositModel.ClientId)" />
+                                        </td>
+                                        <td>
+                                            @* UserName Field - Input in its own cell *@
+                                            <div class="input-group">
+                                                <InputText class="form-control" @bind-Value="SelectedUserNameDisplay" @onclick="OpenUserSelectionModal" placeholder="انتخاب کاربر" readonly />
+                                                <input type="hidden" @bind="DepositModel.UserName" /> @* Hidden input for the actual username/ID *@
+                                            </div>
+                                            <ValidationMessage For="@(() => DepositModel.UserName)" />
+                                        </td>
+                                        <td>
+                                            @* InvoiceId Field - Input in its own cell *@
+                                            <RadzenDropDown @ref=@InvoiceDropDown
+                                                            AllowFiltering="true"
+                                                            Data=@InvoiceDropDownData
+                                                            TextProperty="Title"
+                                                            ValueProperty="Value"
+                                                            @bind-Value="DepositModel.InvoiceId"
+                                                            Style="width: 100%;"
+                                                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                            FilterOperator="StringFilterOperator.StartsWith"
+                                                            AllowClear="true"
+                                                            Name="InvoiceId" />
+                                            <ValidationMessage For="@(() => DepositModel.InvoiceId)" />
+                                        </td>
+                                        <td>
+                                            @* Description Field - Input in its own cell *@
+                                            <InputTextArea class="form-control" @bind-Value="DepositModel.Description" />
+                                            <ValidationMessage For="@(() => DepositModel.Description)" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div> @* End of table-responsive wrapper *@
+
+                        <div class="mt-4 text-end">
+                            <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                                ثبت
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* User Selection Modal for Deposit Page *@
+<div class="modal fade" id="userSelectionModalForDeposit" tabindex="-1" aria-labelledby="userSelectionModalForDepositLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userSelectionModalForDepositLabel">انتخاب کاربر</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" @bind="UserModalSearchQuery" @oninput="FilterUsersInModalForDeposit" placeholder="جستجو بر اساس نام کامل یا نام کاربری" />
+                </div>
+                @if (UserDropDownData.Any() && filteredUsersInModalForDeposit.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var user in filteredUsersInModalForDeposit)
+                        {
+                            <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectUserFromModalForDeposit(user)">
+                                <strong>@user.Title</strong>- @user.Value
+                            </button>
+                        }
+                    </div>
+                }
+                else if (UserDropDownData.Any() && !filteredUsersInModalForDeposit.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var user in UserDropDownData)
+                        {
+                            <button type="button" class="list-group-item list-group-item-action" @onclick="() => SelectUserFromModalForDeposit(user)">
+                                <strong>@user.Title</strong>- @user.Value
+                            </button>
+                        }
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(UserModalSearchQuery))
+                {
+                    <p class="text-muted text-center">کاربری با این مشخصات یافت نشد.</p>
+                }
+                else
+                {
+                    <p class="text-muted text-center">برای جستجو، نام کامل یا نام کاربری را وارد کنید.</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+    private DepositViewModel DepositModel { get; set; } = new(); // Initialize directly
+
+    RadzenDropDown<int?> MyClientsDropDown = new();
+    RadzenDropDown<int?> InvoiceDropDown = new();
+
+    public List<SelectListItemStringValue> UserDropDownData { get; set; } = new(); // This will now hold ALL users for the modal
+    public List<SelectListItem> MyClientsDropDownData { get; set; } = new(); // Initialize directly
+    public List<SelectListItem> InvoiceDropDownData { get; set; } = new(); // Initialize directly
+
+    private string CurrentClientId { get; set; } = string.Empty; // Initialize directly
+    private int myClientOwerWaleltId { get; set; } = 0; // Initialize directly
+
+    // New properties for user selection via textbox and modal
+    private string SelectedUserNameDisplay { get; set; } = string.Empty;
+    private List<SelectListItemStringValue> filteredUsersInModalForDeposit = new();
+    private string UserModalSearchQuery { get; set; } = string.Empty;
+
+
+    bool isLoading = false; // This variable is declared but not used in the provided code. Kept for consistency.
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var myClientOwerUserInfo = await userService.GetUserInfoInTheLocalStorage();
+        var myWallet = await walletService.GetAllForClientOwner(new WalletViewModel()
+        {
+            UserName = myClientOwerUserInfo.Entity.UserName,
+            ClientId = DepositModel.ClientId.HasValue ? DepositModel.ClientId.Value : 0,
+            WalletType = WalletType.Purchase
+        });
+        if (myWallet.IsSuccess && myWallet.Entity != null)
+        {
+            myClientOwerWaleltId = myWallet.Entity.FirstOrDefault()?.Id ?? 0; // Use null-conditional operator and coalesce
+        }
+        var currentUser = await userService.GetUserInfoInTheLocalStorage();
+        if (!currentUser.IsSuccess || currentUser.Entity == null)
+        {
+            NavigationManager.NavigateTo("/membership/Login");
+            return; // Add return to prevent further execution
+        }
+        var myCLients = await walletClientService.GetAll(new WalletClientViewModel() { UserName = currentUser.Entity.UserName });
+        if (!myCLients.IsSuccess || !myCLients.Entity.Any())
+        {
+            // If no clients, navigate or show error. Assuming navigation for now.
+            // Consider if this should navigate to login or a "no clients" page.
+            NavigationManager.NavigateTo("/membership/Login");
+            return; // Add return to prevent further execution
+        }
+        else if (!myCLients.IsSuccess) // This block will only execute if myCLients.IsSuccess is false but Entity.Any() is true, which is contradictory. Re-evaluating logic.
+        {
+            if ((myCLients.ErrorCode != null && myCLients.ErrorCode == "Unauthorized"))
+            {
+                NavigationManager.NavigateTo("");
+                return; // Add return
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", myCLients.Message, "error");
+                return; // Add return
+            }
+        }
+        MyClientsDropDownData = myCLients.Entity.Select(x => new SelectListItem() { Title = x.Title, Value = x.Id }).ToList();
+
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(DepositViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+    private async Task CreateTransaction()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+        try
+        {
+            var myClientOwerUserInfo = await userService.GetUserInfoInTheLocalStorage();
+
+            // Null checks added for FirstOrDefault() results
+            var selectedUserWalletInfoResult = await walletService.GetAllForClientOwner(new WalletViewModel()
+            {
+                User = new UserViewModel() { UserName = DepositModel.UserName },
+                ClientId = DepositModel.ClientId.HasValue ? DepositModel.ClientId.Value : 0,
+                WalletType = WalletType.Purchase
+            });
+            var selectedUserWalletInfo = selectedUserWalletInfoResult.Entity?.FirstOrDefault();
+
+            var selectedAgencyWalletInfoResult = await walletService.GetAllForClientOwner(new WalletViewModel()
+            {
+                User = new UserViewModel() { UserName = myClientOwerUserInfo.Entity?.UserName }, // Null-conditional for myClientOwerUserInfo.Entity
+                ClientId = DepositModel.ClientId.HasValue ? DepositModel.ClientId.Value : 0,
+                WalletType = WalletType.Purchase
+            });
+            var selectedAgencyWalletInfo = selectedAgencyWalletInfoResult.Entity?.FirstOrDefault();
+
+            if (selectedUserWalletInfo == null || selectedAgencyWalletInfo == null)
+            {
+                await SweetAlert.ShowAlert("خطا !", "اطلاعات کیف پول کاربر یا آژانس یافت نشد.", "error");
+                isProcessing = false;
+                StateHasChanged();
+                return;
+            }
+
+            var result = await transactionService.CreateDepositForClientOwner(new TransactionViewModel()
+            {
+                Amount = DepositModel.Amount,
+                IsWalletValue = false,
+                NotMentionedInReport = false,
+                InvoiceId = DepositModel.InvoiceId, // Use DepositModel.InvoiceId directly
+                InvoiceTitle = InvoiceDropDownData.FirstOrDefault(x => x.Value == DepositModel.InvoiceId)?.Title, // Get title from dropdown data
+                Description = DepositModel.Description,
+                TransactionSource = "صدور سند دستی بدون فاکتور",
+                TransactionDateTime = DateTime.Now,
+                DueDateTime = null,
+                WalletId = selectedUserWalletInfo.Id,
+                TransactionPartyWalletId = selectedAgencyWalletInfo.Id,
+                WalletTransactionCalculationType = WalletTransactionCalculationType.Deposit,
+                TransactionType = TransactionType.Charge,
+                JsonTransActionDataFromClient = JsonConvert.SerializeObject(new { Description = "شارژ دستی حساب کاربر " })
+            });
+
+            if (!result.IsSuccess)
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+            }
+            else
+            {
+                await SweetAlert.ShowToast(result.Message, "success");
+                // await SweetAlert.ShowAlert("صدور سند دستی", result.Message, "success");
+                // Optionally clear the form or navigate
+                DepositModel = new(); // Reset form
+                SelectedUserNameDisplay = string.Empty; // Clear display name
+                UserDropDownData = new(); // Clear user data (for modal)
+                InvoiceDropDownData = new(); // Clear invoice data
+                MyClientsDropDown.Value = null; // Clear selected client
+                InvoiceDropDown.Value = null; // Clear selected invoice
+                CurrentClientId = string.Empty;
+            }
+            isProcessing = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+
+    }
+    #region clientSelected
+    private async Task OnClientChange(object value)
+    {
+        CurrentClientId = value?.ToString() ?? string.Empty; // Safely assign value
+        DepositModel.UserName = null; // Clear user selection when client changes
+        SelectedUserNameDisplay = string.Empty; // Clear display name
+        DepositModel.InvoiceId = null; // Clear invoice selection when client changes
+        UserDropDownData.Clear(); // Clear user dropdown data (for modal)
+        filteredUsersInModalForDeposit.Clear(); // Clear filtered users in modal
+        InvoiceDropDownData.Clear(); // Clear invoice dropdown data
+
+        if (!string.IsNullOrEmpty(CurrentClientId))
+        {
+            await FillUserNameForModal(); // Call method to load users for the modal
+        }
+        StateHasChanged(); // Ensure UI updates
+    }
+
+    // This method is no longer directly used by a RadzenDropDown, but can be adapted if a specific user change event is needed
+    // private async Task OnUserChange(object value)
+    // {
+    //     // Logic here would depend on how you want to handle direct changes if not from modal
+    //     StateHasChanged();
+    // }
+
+    private async Task FillUserNameForModal()
+    {
+        try
+        {
+            var getAllOfMyUsers = await transactionService.GetAllOfMyUsers(new TransactionViewModel()
+            {
+                Wallet = new WalletViewModel() { },
+                ClientApiId = CurrentClientId
+            });
+
+            if (getAllOfMyUsers.IsSuccess && getAllOfMyUsers.Entity != null)
+            {
+                // Store all users in UserDropDownData for filtering in the modal
+                UserDropDownData = getAllOfMyUsers.Entity.Select(x => new SelectListItemStringValue() { Title = x.FullName, Value = x.UserName }).ToList();
+            }
+            else if (!getAllOfMyUsers.IsSuccess)
+            {
+                if ((getAllOfMyUsers.ErrorCode != null && getAllOfMyUsers.ErrorCode == "Unauthorized"))
+                {
+                    NavigationManager.NavigateTo("");
+                }
+                else
+                {
+                    await SweetAlert.ShowAlert("خطا !", getAllOfMyUsers.Message, "error");
+                }
+            }
+            // If not success or entity is null, UserDropDownData remains empty, which is correct.
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user details: {ex.Message}");
+            await SweetAlert.ShowAlert("خطا !", "خطا در بارگذاری لیست کاربران: " + ex.Message, "error");
+        }
+    }
+
+    private void OpenUserSelectionModal()
+    {
+        // Reset search query and filtered list when opening modal
+        UserModalSearchQuery = string.Empty;
+        filteredUsersInModalForDeposit = new();
+        ShowModal("userSelectionModalForDeposit");
+    }
+
+    private void FilterUsersInModalForDeposit(ChangeEventArgs e)
+    {
+        UserModalSearchQuery = e.Value?.ToString() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(UserModalSearchQuery))
+        {
+            filteredUsersInModalForDeposit = UserDropDownData
+                .Where(u => u.Title.Contains(UserModalSearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                            u.Value.Contains(UserModalSearchQuery, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        else
+        {
+            filteredUsersInModalForDeposit.Clear();
+        }
+        StateHasChanged();
+    }
+
+    private async void SelectUserFromModalForDeposit(SelectListItemStringValue user)
+    {
+        DepositModel.UserName = user.Value; // Set the actual username/ID
+        SelectedUserNameDisplay = user.Title + " (" + user.Value + ")"; // Set the display name
+        await HideModal("userSelectionModalForDeposit");
+        await FillInvoices(); // Refill invoices based on the newly selected user
+        StateHasChanged();
+    }
+
+
+    private async Task FillInvoices()
+    {
+        try
+        {
+            var getAllMyInvoices = await transactionService.GetAllOfMyInvoices(new GetAllOfMyInvoicesViewModel()
+            {
+                ClientId = CurrentClientId,
+                WalletOwnerName = DepositModel.UserName // Use DepositModel.UserName here
+            });
+
+            if (getAllMyInvoices.IsSuccess && getAllMyInvoices.Entity != null)
+            {
+                InvoiceDropDownData = getAllMyInvoices.Entity.Select(x => new SelectListItem() { Title = x.InvoiceTitle, Value = x.InvoiceId.Value }).ToList();
+            }
+            else if (!getAllMyInvoices.IsSuccess)
+            {
+                if ((getAllMyInvoices.ErrorCode != null && getAllMyInvoices.ErrorCode == "Unauthorized"))
+                {
+                    NavigationManager.NavigateTo("");
+                }
+                else
+                {
+                    await SweetAlert.ShowAlert("خطا !", getAllMyInvoices.Message, "error");
+                }
+            }
+            // If not success or entity is null, InvoiceDropDownData remains empty, which is correct.
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading invoices: {ex.Message}");
+            await SweetAlert.ShowAlert("خطا !", "خطا در بارگذاری لیست فاکتورها: " + ex.Message, "error");
+        }
+    }
+
+    // JavaScript interop to show/hide Bootstrap modals (reused and slightly modified)
+    private async Task ShowModal(string modalId)
+    {
+        await JS.InvokeVoidAsync("eval", $"var myModal = new bootstrap.Modal(document.getElementById('{modalId}')); myModal.show();");
+    }
+
+    private async Task HideModal(string modalId)
+    {
+        await JS.InvokeVoidAsync("eval", $"var myModal = bootstrap.Modal.getInstance(document.getElementById('{modalId}')); if (myModal) myModal.hide();");
+    }
+
+    #endregion
+
+
+}

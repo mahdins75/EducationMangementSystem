@@ -1,0 +1,132 @@
+﻿@page "/Membership/Register"
+@using Mstech.Frontend.Wallet.Service.Interface.Membership
+@using Mstech.Frontend.Wallet.ViewModel.DTO
+@inject IUserService userService
+@inject SweetAlertService SweetAlert
+@inject NavigationManager NavigationManager
+
+
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card text-right" style="width: 50rem;">
+        <div class="card-header header-color bg-primary text-white text-left">
+            ساخت اکانت کاربری جدید
+        </div>
+        <div class="card-body">
+            <EditForm Model="RegisterModel" OnValidSubmit="@(() => HandleRegister())">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="form-group">
+                    <label for="Email">نام کاربری:</label>
+                    <InputText @bind-Value="RegisterModel.Email" class="form-control" />
+                    <ValidationMessage For="@(() => RegisterModel.Email)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="Name">نام :</label>
+                    <InputText @bind-Value="RegisterModel.Name" class="form-control" />
+                    <ValidationMessage For="@(() => RegisterModel.Name)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="LastName">نام خانوادگی:</label>
+                    <InputText @bind-Value="RegisterModel.LastName" class="form-control" />
+                    <ValidationMessage For="@(() => RegisterModel.LastName)" />
+                </div>
+                <div class="form-group">
+                    <label for="PhoneNumber">شماره تلفن:</label>
+                    <InputText @bind-Value="RegisterModel.PhoneNumber" class="form-control" />
+                    <ValidationMessage For="@(() => RegisterModel.PhoneNumber)" />
+                </div>
+                <div class="form-group">
+                    <label for="Password">رمز عبور:</label>
+                    <InputText @bind-Value="RegisterModel.Password" class="form-control" />
+                    <ValidationMessage For="@(() => RegisterModel.Password)" />
+                </div>
+                <div class="form-group">
+                    <label for="ConfirmPassword">رمز عبور:</label>
+                    <InputText @bind-Value="RegisterModel.ConfirmPassword" class="form-control" />
+                    <ValidationMessage For="@(() => RegisterModel.ConfirmPassword)" />
+                </div>
+                <button type="submit" disabled="@isProcessing" class="btn btn-primary btn-color w-80 mt-2">ثبت نام</button>
+
+                <div>
+                    <p>
+                        <a id="forgot-password" href="">رمز عبور خود را فراموش کرده اید؟</a>
+                    </p>
+                    <p>
+                        <a onclick="@GoToLogin" href="#">صفحه ورود</a>
+                    </p>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromForm]
+    private RegisterViewModel RegisterModel { get; set; }
+
+    private bool isProcessing = false;
+
+    protected override void OnInitialized()
+    {
+        RegisterModel = new RegisterViewModel();
+        base.OnInitialized();
+    }
+    private async Task HandleRegister()
+    {
+        // handle loading
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+
+        var result = await userService.Register(RegisterModel);
+        if (!result.IsSuccess)
+        {
+
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbidden"))
+            {
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                if (currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower())
+                {
+                    NavigationManager.NavigateTo("/membership/Login");
+
+                }
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+            }
+
+        }
+        else
+        {
+            await SweetAlert.ShowAlert("موفق !", result.Message, "success");
+
+        }
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private void GoToLogin()
+    {
+        NavigationManager.NavigateTo("/Memebership/Login");
+    }
+
+}

@@ -1,0 +1,256 @@
+﻿@page "/WalletInfo/Wallet/WalletTransactions"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+
+
+@inject ITransactionService transactionService
+@inject IWalletService walletService;
+@inject IUserService userService
+@inject IDynamicTitleService dynamicTitleService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+<div class="content m-4">
+    <div class="row">
+        <div class="col-12">
+            <SearchPanel grid="grid" searchModel="searchModel" OnValueChanged="UpdateParentValue" />
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="font-weight-bold"></span>گزارش تراکنش ها<span></span>
+                </div>
+                <div class="card-body">
+                    <!-- My Funds Panel -->
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h5 class="fw-bold">موجودی</h5>
+                            <span>ريال</span>
+                            <span class="fs-3 fw-bold">@WalletBalance</span>
+                        </div>
+                        <div class="d-flex">
+                            <button class="btn btn-primary me-2" @onclick="(() => OpenDipositModal())">
+                                <i class="fas fa-wallet"></i>افزارش اعتبار
+                            </button>
+                            <button class="btn btn-light me-2" @* @onclick="(()=>OpenTransferModal())" *@>
+                                <i class="fas fa-exchange-alt"></i> انتقال
+                            </button>
+                            <button class="btn btn-light" @* @onclick="(()=>OpenWithdraw())" *@>
+                                <i class="fas fa-download"></i> برداشت
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Radzen Grid -->
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count"
+                                    Data="@WalletClients" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true"
+                                    AllowPaging="true" PageSize="30" PagerHorizontalAlign="HorizontalAlign.Center"
+                                    ColumnWidth="200px">
+
+                        <Columns>
+                            <RadzenDataGridColumn Width="50px" Title="#" Filterable="false" Sortable="false"
+                                                  TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    @(WalletClients.IndexOf(data) + 1)
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionDateTimeText)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.TransactionDateTimeText))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionSource)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.TransactionSource))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionPartyUserName)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.TransactionPartyUserName))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.InvoiceTitle)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.InvoiceTitle))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionTypeTitle)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.TransactionTypeTitle))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.TransactionPartyUserName)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.TransactionPartyUserName))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.AmountText)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.AmountText))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.PersianTextDueDateTime)" Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.PersianTextDueDateTime))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(TransactionViewModel.Description)"
+                                                  Filterable="false"
+                                                  Title="@GetDisplayName(nameof(TransactionViewModel.Description))"
+                                                  Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="TransactionViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    @if (!string.IsNullOrEmpty(data.PersianTextDueDateTime))
+                                    {
+                                        <a class="btn btn-sm" @onclick="(() => NvigateExternalPaymentPage(data.Wallet.Client.BaseUrl))">
+                                            <i class="">پرداخت</i>
+                                        </a>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<br />
+
+<Deposit @ref="DepositComponentRef" WalletId="WalletId" CurrentUserName="CurrentUserName" grid="grid" />
+<Transfer @ref="TransferComponentRef" WalletId="WalletId" grid="grid" />
+<Withdraw @ref="WithdrawalComponentRef" WalletId="WalletId" WalletBalance="WalletBalance"
+          CurrentUserName="CurrentUserName" grid="grid" />
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+    RadzenDataGrid<TransactionViewModel> grid = new();
+    List<TransactionViewModel> WalletClients = new();
+    Deposit DepositComponentRef { get; set; }
+    Transfer TransferComponentRef { get; set; }
+    Withdraw WithdrawalComponentRef { get; set; }
+    public TransactionViewModel searchModel { get; set; }
+
+    private string modalDisplayClass = "";
+    private string modalStyle = "none !important";
+    int count;
+    private int WalletId;
+    private string WalletBalance;
+    bool isLoading = false;
+    private bool isProcessing = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        searchModel = new();
+        var pageTitle = await dynamicTitleService.GetPageTitle("WalletTransactions");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        WalletId = Convert.ToInt32(query["walletId"]);
+
+        searchModel.WalletId = WalletId;
+
+        await LoadData(new LoadDataArgs() { Top = 30, Skip = 0 });
+
+        StateHasChanged();
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        var currentUser = await userService.GetUserInfoInTheLocalStorage();
+
+        isLoading = true;
+        isProcessing = true;
+        StateHasChanged();
+
+        await Task.Yield();
+
+        var query = await transactionService.GetAll(new TransactionViewModel()
+        {
+            WalletOwnerUserName = currentUser.Entity.UserName,
+            Wallet = new WalletViewModel() { Client = new WalletClientViewModel() { ClientIdForApi = searchModel.ClientApiId } },
+            PageSize = args.Top.Value,
+            Skip = args.Skip.Value,
+            IsPagination = true,
+            InvoiceId = searchModel.InvoiceId,
+            WalletId = (searchModel.WalletId != null && searchModel.WalletId > 0) ? searchModel.WalletId : null,
+        });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            WalletClients = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            WalletClients = new List<TransactionViewModel>(); // Empty list if data is null
+        }
+
+        if (query.Entity != null)
+        {
+            WalletClients = query.Entity.ToList();
+        }
+
+        var walletBalanece = await transactionService.GetBalance(new WalletViewModel() { Id = WalletId, User = new UserViewModel() { UserName = currentUser.Entity.UserName } });
+        if (walletBalanece.IsSuccess && !string.IsNullOrEmpty(walletBalanece.Entity))
+        {
+            WalletBalance = walletBalanece.Entity;
+        }
+
+        isLoading = false;
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private async Task OpenDipositModal()
+    {
+        await DepositComponentRef.OpenDepositModal();
+        StateHasChanged();
+    }
+
+    private async Task OpenTransferModal()
+    {
+        await TransferComponentRef.OpenTransferModal();
+        StateHasChanged();
+    }
+
+    private async Task OpenWithdrawalModal()
+    {
+        await WithdrawalComponentRef.OpenWithDrawalModal();
+        StateHasChanged();
+    }
+
+    private void UpdateParentValue(TransactionViewModel model)
+    {
+        searchModel = model;
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(TransactionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+    private async Task NvigateExternalPaymentPage(string url)
+    {
+        await JS.InvokeVoidAsync("openInNewTab", url);
+    }
+}

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseBlazorWebAssembly>true</UseBlazorWebAssembly>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Mstech.Frontend.Wallet.Servies\Mstech.Frontend.Wallet.Service.csproj" />
+		<ProjectReference Include="..\..\Mstech.Frontend.wallet.ViewModel\Mstech.Frontend.Wallet.ViewModel.csproj" />
+		<ProjectReference Include="..\Mstech.Wallet.Components\Mstech.Wallet.Components.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Transaction\UserTransaction\" />
+	</ItemGroup>
+
+
+
+</Project>

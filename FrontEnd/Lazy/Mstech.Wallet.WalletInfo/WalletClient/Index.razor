@@ -1,0 +1,191 @@
+﻿@page "/WalletInfo/WalletClient/Index"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Blazored.Typeahead
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+
+@inject IWalletClientService walletClientService
+@inject IDynamicTitleService dynamicTitleService
+@inject IJSRuntime JS
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+<div class="content m-4">
+    <div class="row">
+        <div class="col-12">
+
+            <Create statusDropDownData="statusDropDownData" ownerDropDownData="ownerDropDownData" grid="grid" />
+
+            <div class="card">
+                <div class="card-header">
+                    لیست زیر مجموعه ها
+                </div>
+                <div class="card-body">
+                    <!-- Radzen Grid -->
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@WalletClients" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(WalletClientViewModel.Title)" Filterable="false" Title="@GetDisplayName(nameof(WalletClientViewModel.Title))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletClientViewModel.OwnerFullName)" Filterable="false" Title="@GetDisplayName(nameof(WalletClientViewModel.OwnerFullName))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletClientViewModel.ActivationStatusTitle)" Filterable="false" Title="@GetDisplayName("ActivationStatusTitle")" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletClientViewModel.WalletsCount)" Filterable="false" Title="@GetDisplayName(nameof(WalletClientViewModel.WalletsCount))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(WalletClientViewModel.ClientIdForApi)" Filterable="false" Title="@GetDisplayName(nameof(WalletClientViewModel.ClientIdForApi))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="WalletClientViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    <button class="btn  btn-sm " @onclick="() => OpenEditModal(data)"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="btn btn-sm btn" @onclick="() => OpenDeleteConfirmationModal(data)"><i class="fa-regular fa-trash"></i></button>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<br />
+
+
+<Edit statusDropDownData="statusDropDownData" ownerDropDownData="ownerDropDownData" @ref="editComponentRef" grid="grid" />
+
+
+@code {
+
+    RadzenDataGrid<WalletClientViewModel> grid = new();
+    RadzenDropDown<int> statusDropDown = new();
+    RadzenDropDown<string> ownerDropDown = new();
+    List<SelectListItem> statusDropDownData = new();
+    List<SelectListItemStringValue> ownerDropDownData = new();
+    List<WalletClientViewModel> WalletClients = new();
+
+    private Edit editComponentRef { get; set; }
+    private string modalDisplayClass = "";
+    private string modalStyle = "none !important";
+    int count;
+    bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var clientStatusResponse = await getDropDownDataService.GetEnumFropDown<ClientStatus>();
+        if (clientStatusResponse.IsSuccess)
+        {
+            if ((clientStatusResponse.ErrorCode != null && clientStatusResponse.ErrorCode == "Unauthorized") || (clientStatusResponse.ErrorCode != null && clientStatusResponse.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", clientStatusResponse.Message, "error");
+
+            }
+
+        }
+        statusDropDownData = clientStatusResponse.Entity;
+
+
+        var ownerResponse = await getDropDownDataService.GetDropDownUsers(new UserViewModel());
+        if (!ownerResponse.IsSuccess)
+        {
+
+            if ((ownerResponse.ErrorCode != null && ownerResponse.ErrorCode == "Unauthorized") || (ownerResponse.ErrorCode != null && ownerResponse.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", ownerResponse.Message, "error");
+
+            }
+
+        }
+        ownerDropDownData = ownerResponse.Entity;
+
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        var pageTitle = await dynamicTitleService.GetPageTitle("WalletClient");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        StateHasChanged();
+    }
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        var query = await walletClientService.GetAll(new WalletClientViewModel() { PageSize = args.Top.Value, Skip = args.Skip.Value, IsPagination = true });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            WalletClients = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            WalletClients = new List<WalletClientViewModel>(); // Empty list if data is null
+        }
+        if (query.Entity != null)
+        {
+            WalletClients = query.Entity.ToList();
+
+        }
+
+        isLoading = false;
+    }
+
+
+    private async Task OpenEditModal(WalletClientViewModel walletClient)
+    {
+
+        await editComponentRef.OpenEditModal(walletClient);
+        StateHasChanged();
+    }
+
+    private async void OpenDeleteConfirmationModal(WalletClientViewModel walletClient)
+    {
+        var result = await SweetAlert.ShowConfirmation("عملیات حذف", $"آیا میخواهید {walletClient.Title} را حذف کنید؟");
+        if (result == true)
+        {
+            var deleteResult = await walletClientService.Delete(new WalletClientViewModel() { Id = walletClient.Id });
+            if (!deleteResult.IsSuccess)
+            {
+                if ((deleteResult.ErrorCode != null && deleteResult.ErrorCode == "Unauthorized") || (deleteResult.ErrorCode != null && deleteResult.ErrorCode == "Forbiden"))
+                {
+                    NavigationManager.NavigateTo("");
+
+                }
+                else
+                {
+                    await SweetAlert.ShowAlert("خطا !", deleteResult.Message, "error");
+
+                }
+
+            }
+        }
+        await grid.Reload();
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(WalletClientViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+
+}

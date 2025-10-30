@@ -1,0 +1,187 @@
+﻿@page "/Membership/User/Index"
+@using Mstech.FrontEnd.Wallet.ViewModel
+
+@inject IJSRuntime JS
+
+@inject IUserService userService
+
+@inject IDynamicTitleService dynamicTitleService
+
+@inject IGetDropDownDataService getDropDownDataService
+
+@inject NavigationManager NavigationManager
+
+@inject SweetAlertService SweetAlert
+
+<div class="content">
+    <div class="row">
+        <div class="col-12">
+
+            <Create grid="grid" />
+
+            <div class="card">
+                <div class="card-header">
+                    لیست کاربران سیستم
+                </div>
+                <div class="card-body">
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@Users" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center" ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(UserViewModel.UserName)" Filterable="false" Title="@GetDisplayName(nameof(UserViewModel.UserName))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(UserViewModel.FullName)" Filterable="false" Title="@GetDisplayName(nameof(UserViewModel.FullName))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(UserViewModel.PositionName)" Filterable="false" Title="@GetDisplayName(nameof(UserViewModel.PositionName))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(UserViewModel.IsActiveTitle)" Filterable="false" Title="@GetDisplayName(nameof(UserViewModel.IsActiveTitle))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(UserViewModel.PhoneNumber)" Filterable="false" Title="@GetDisplayName(nameof(UserViewModel.PhoneNumber))" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="UserViewModel" Width="120px" TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    <button class="btn  btn-sm btn" @onclick="() => OpenEditModal(data)"><i class="fa-regular fa-pen-to-square"></i></button>
+                                    <button class="btn  btn-sm btn" @onclick="() => OpenWalletModal(data)"><i class="fa-regular fa-wallet "></i></button>
+                                    <button class="btn btn-sm btn" @onclick="() => OpenDeleteConfirmationModal(data)"><i class="fa-regular fa-trash"></i></button>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<Edit @ref="editComponentRef" grid="grid" />
+<Wallets @ref="walletsComponentRef" />
+
+
+@code {
+
+    RadzenDataGrid<UserViewModel> grid = new();
+    List<UserViewModel> Users = new();
+
+    private Edit editComponentRef { get; set; }
+
+    private Wallets walletsComponentRef { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        var pageTitle = await dynamicTitleService.GetPageTitle("User");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        StateHasChanged();
+    }
+
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        var query = await userService.GetAllUsers(new UserViewModel() { PageSize = args.Top.Value, Skip = args.Skip.Value, IsPagination = true });
+
+        await CheckResultStatus(query);
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            Users = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            Users = new List<UserViewModel>(); // Empty list if data is null
+        }
+        if (query.Entity != null)
+        {
+            Users = query.Entity.ToList();
+
+        }
+
+        isLoading = false;
+    }
+
+    private async Task OpenEditModal(UserViewModel user)
+    {
+
+        await editComponentRef.OpenEditModal(user);
+        StateHasChanged();
+    }
+
+    private async Task OpenWalletModal(UserViewModel user)
+    {
+        await walletsComponentRef.OpenWalletModal(user);
+        StateHasChanged();
+    }
+
+    private async void OpenDeleteConfirmationModal(UserViewModel userModel)
+    {
+        var result = await SweetAlert.ShowConfirmation("عملیات حذف", $"آیا میخواهید {userModel.FullName} را حذف کنید؟");
+        if (result == true)
+        {
+            var deleteResult = await userService.DeleteUser(new UserViewModel() { Id = userModel.Id });
+            if (!deleteResult.IsSuccess)
+            {
+                if ((deleteResult.ErrorCode != null && deleteResult.ErrorCode == "Unauthorized") || (deleteResult.ErrorCode != null && deleteResult.ErrorCode == "Forbiden"))
+                {
+                    NavigationManager.NavigateTo("");
+
+                }
+                else
+                {
+                    await SweetAlert.ShowAlert("خطا !", deleteResult.Message, "error");
+
+                }
+
+            }
+        }
+        await grid.Reload();
+        StateHasChanged();
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(UserViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName;
+    }
+
+    private async Task CheckResultStatus<Request>(ResponseViewModel<Request> result)
+    {
+        if (!result.IsSuccess)
+        {
+
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbidden"))
+            {
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                if (currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower())
+                {
+                    NavigationManager.NavigateTo("/membership/Login");
+                }
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+            }
+
+        }
+    }
+
+}

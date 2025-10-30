@@ -1,0 +1,292 @@
+﻿@model UserFilterViewModel
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewData["Title"] = "مدیریت کاربران";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-2 mt-1">
+        <div class="row breadcrumbs-top">
+            <div class="col-12">
+                <h5 class="content-header-title float-left pr-1">
+                    @ViewData["Title"]
+                </h5>
+                <div class="breadcrumb-wrapper">
+                    <ol class="breadcrumb p-0 mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin/Home/index"><i class="bx bx-home-alt"></i></a>
+                        </li>
+                        <li class="breadcrumb-item active">
+                            مدیریت کاربران
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="content-body">
+    <section class="user-list-wrapper">
+        <div class="users-list-filter px-1">
+            <div id="User_Index" class="row border rounded py-2 mb-2">
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <label asp-for="FullName"></label>
+                    <fieldset class="form-group">
+                        <input asp-for="FullName" class="form-control" />
+                    </fieldset>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <label asp-for="IsActive"></label>
+                    <fieldset class="form-group">
+                        <select asp-for="IsActive" asp-items="Model.StatusList" class="form-control">
+                        </select>
+                    </fieldset>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4 d-flex align-items-center ml-auto">
+                    <button id="btnSearch" type="button" class="btn btn-primary glow mb-0 mt-75 ml-auto">
+                        <i class="bx bx-filter"></i> فیلتر
+                    </button>
+                    <button id="resetFilters" type="reset" class="btn btn-light glow users-list-clear mb-0 mt-75"
+                            style="margin-right: 7px">
+                        <i class='bx bxs-eraser'></i> پاکسازی
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="users-list-table">
+            <div class="card">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="table-responsive table-padding">
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-success glow mb-0 mb-75" id="btn_Create" data-toggle="modal" data-target="#modalCreateUser"
+                                @(Model.Links.Any(x => x.ToLower().Contains("/admin/user/create")) ? "" : "disabled")>
+                                    <i class="fa fa-filter"></i> <i class='bx bx-plus'></i> ایجاد کاربر
+                                </button>
+                                <button type="button" id="btn_Edit" data-toggle="modal" data-target="#modalEditUser" style="display:none">
+                                </button>
+                                <button type="button" id="btn_ChangePassword" data-toggle="modal"
+                                        data-target="#modalChangePasswordUser" style="display:none">
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                @{
+                                    await Html.RenderPartialAsync("_DataTable").ConfigureAwait(false);
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+@{
+    await Html.RenderPartialAsync("_Create", new CreateUserViewModel() { StatusList = Model.StatusList, PositionList = Model.PositionList }).ConfigureAwait(false);
+}
+@{
+    await Html.RenderPartialAsync("_Edit", new EditUserViewModel() { StatusList = Model.StatusList, PositionList = Model.PositionList }).ConfigureAwait(false);
+}
+@{
+    await Html.RenderPartialAsync("_Role").ConfigureAwait(false);
+}
+@{
+    await Html.RenderPartialAsync("_ChangePassword", new ChangePasswordUserViewModel()).ConfigureAwait(false);
+}
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $('#User_Table tbody').on('click', "a[id^='btnEdit']", function (e) {
+            e.preventDefault();
+            var id = $(this).data("id");
+            $(".loader-box").css("display", "block");
+            $.ajax({
+                url: '@Url.Action("GetUser", "User", new { Area = "Admin" })',
+                type: "GET",
+                async: false,
+                dataType: "json",
+                data: { "id": id },
+                success: function (response) {
+                    $(".loader-box").css("display", "none");
+                    $('#EditUserForm input[name=Id]').val(response.data.id);
+                    $('#EditUserForm input[name=Name]').val(response.data.name);
+                    $('#EditUserForm input[name=LastName]').val(response.data.lastName);
+                    $('#EditUserForm input[name=Email]').val(response.data.email);
+                    $('#EditUserForm input[name=Phone]').val(response.data.phone);
+                    $('#EditUserForm select[name=PositionId]').val(response.data.positionId);
+                    if (!response.data.isActive) {
+                        $('#EditUserForm select[name=IsActive] option[value="false"]').attr("selected", "selected");
+                    }
+                    debugger;
+                    if (response.data.editIsHRMember) {
+                        $('#EditIsHRMember').prop('checked', true);
+                    }
+                    else {
+                        $('#EditIsHRMember').prop('checked', false);
+                    }
+                    $('#btn_Edit').click();
+                },
+                error: function (xhr, status, error) {
+                    $(".loader-box").css("display", "none");
+                    var message = 'عملیات با خطا مواجه شد.';
+                    if (xhr.status == 403) {
+                        message = 'دسترسی این عملیات را ندارید.';
+                    }
+                    toastr.error(`${message}`, 'اخطار!', {
+                        rtl: true,
+                        positionClass: 'toast-bottom-right',
+                        containerId: 'toast-bottom-right'
+                    });
+                }
+            });
+        });
+
+        $('#User_Table tbody').on('click', "a[id^='btnDelete']", function (e) {
+            e.preventDefault();
+            var id = $(this).data("id");
+            Swal.fire({
+                title: '<h4>توجه!</h4>',
+                icon: 'info',
+                html: `<span>آیا از حذف اطمینان دارید؟</span>`,
+                showCancelButton: true,
+                cancelButtonText: 'انصراف',
+                cancelButtonColor: '#6e7881',
+                confirmButtonText: 'حذف کاربر!',
+            }).then(function (result) {
+                if (result.value) {
+                    $(".loader-box").css("display", "block");
+                    $.ajax({
+                        url: '@Url.Action("Delete", "User", new { Area = "Admin" })',
+                        type: "Post",
+                        async: false,
+                        dataType: "json",
+                        data: { "id": id },
+                        success: function (response) {
+                            $(".loader-box").css("display", "none");
+                            toastr.success('حذف کاربر با موفقیت انجام شد.', 'عملیات موفق', {
+                                rtl: true,
+                                positionClass: 'toast-bottom-right',
+                                containerId: 'toast-bottom-right'
+                            });
+                            reloadUserDataTable();
+                        },
+                        error: function (xhr, status, error) {
+                            $(".loader-box").css("display", "none");
+                            var message = 'حذف کاربر با خطا مواجه شد.';
+                            if (xhr.status == 403) {
+                                message = 'دسترسی این عملیات را ندارید.';
+                            }
+                            toastr.error(`${message}`, 'اخطار!', {
+                                rtl: true,
+                                positionClass: 'toast-bottom-right',
+                                containerId: 'toast-bottom-right'
+                            });
+                        }
+                    }); return true;
+                }
+                else {
+                    return false;
+                }
+            });
+        });
+
+        $('#User_Table tbody').on('click', "a[id^='btnChangePass']", function (e) {
+            e.preventDefault();
+            var id = $(this).data("id");
+
+            $('#ChangePasswordUserForm input[name=Password]').val('');
+            $('#ChangePasswordUserForm input[name=OldPassword]').val('');
+            $('#ChangePasswordUserForm input[name=Id]').val(id);
+            $('#btn_ChangePassword').click();
+        });
+
+        $('#User_Table tbody').on('click', "a[id^='btnAddRole']", function (e) {
+            e.preventDefault();
+            var userId = $(this).data("id");
+            $('#ManageRoleForm #UserId').val(userId);
+            reloadManageRoleDataTable();
+            $('#ManageRoleModal').modal('toggle');
+
+            //var roleId = $(this).attr("data-roleid");
+            //$.ajax({
+            //    url: '@Url.Action("GetAll", "Role", new { Area = "MemberShip" })',
+            //    type: "get",
+            //    async: false,
+            //    dataType: "json",
+            //    success: function (response) {
+
+
+            //        //let htmldata = `<option selected disabled readonly>انتخاب کنید</option>`;
+
+            //        //response.result.foreach(function (item, index) {
+            //        //    if (roleid == item.id) {
+            //        //        htmldata += `<option selected value='${item.id}'>${item.name}</option>`;
+            //        //    }
+            //        //    else {
+            //        //        htmldata += `<option  value='${item.id}'>${item.name}</option>`;
+            //        //    }
+            //        //})
+            //        //$("#RoleForm select[name=RoleId]").html(htmlData);
+            //        //$("#RoleForm select[name=RoleId]").selectpicker('refresh');
+            //        //$("#SelectedUserIdForRole").val(id);
+            //        //$('#RoleModal').modal('toggle');
+            //    },
+            //    error: function (xhr, status, error) {
+            //        toastr.error('عملیات با خطا مواجه شد.', 'اخطار!', {
+            //            rtl: true,
+            //            positionClass: 'toast-bottom-right',
+            //            containerId: 'toast-bottom-right'
+            //        });
+            //    }
+            //});
+        });
+
+    });
+
+    $(window).keydown(function (event) {
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13') {
+            $('#btnSearch').click();
+        }
+    });
+
+    $('#btnSearch').click(function (e) {
+        e.preventDefault();
+        reloadUserDataTable();
+    });
+
+    $('#resetFilters').click(function (e) {
+        e.preventDefault();
+        resetFilterUserDataTable();
+        reloadUserDataTable();
+    });
+
+
+                            ////toast success
+                            //$('#toast-success').on('click', function () {
+                            //    toastr.success('متن پیام موفقیت آمیز', 'موفقیت آمیز', {
+                            //        rtl: true,
+                            //        positionClass: 'toast-bottom-right',
+                            //        containerId: 'toast-bottom-right'
+                            //    });
+                            //});
+
+                            ////toast warning
+                            //$('#toast-warning').on('click', function () {
+                            //    toastr.warning('متن پیام هشدار', 'هشدار', {
+                            //        rtl: true,
+                            //        positionClass: 'toast-bottom-right',
+                            //        containerId: 'toast-bottom-right'
+                            //    });
+                            //});
+
+</script>

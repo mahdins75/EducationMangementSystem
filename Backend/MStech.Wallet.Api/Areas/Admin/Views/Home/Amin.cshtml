@@ -1,0 +1,806 @@
+﻿@using Mstech.ViewModel.DTO;
+@model ConfirmEmailNumberViewModel
+
+@{
+    Layout = "_LayoutAdmin";
+    ViewData["Title"] = "slm";
+}
+
+@section secHead {
+    <link rel="stylesheet" type="text/css" href="~/assets/css/pages/page-users.css">
+    <link rel="stylesheet" type="text/css" href="~/assets/vendors/css/pickers/pickadate/pickadate.css">
+    <link rel="stylesheet" type="text/css" href="~/assets/vendors/css/pickers/daterange/daterangepicker.css">
+    <link rel="stylesheet" type="text/css" href="~/assets/vendors/css/pickers/datepicker-jalali/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="~/assets/vendors/css/forms/select/select2.min.css">
+    <style>
+        .table-interview-info td,
+        .table-interview-info tr {
+            border: none !important;
+        }
+    </style>
+}
+
+<button type="button" class="btn btn-outline-primary block" data-toggle="modal" data-target="#exampleModalCenter">
+    اجرای مودال
+</button>
+<!-- Vertically Centered modal Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered modal-dialog-scrollable modal-Xl"
+        role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title white" id="exampleModalCenterTitle">اطلاعات متقاضی</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="بستن">
+                    <i class="bx bx-x"></i>
+                </button>
+            </div>
+            <div class="modal-body max-height-75">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="information-tab-fill" data-toggle="tab" href="#information-fill" role="tab"
+                            aria-controls="information-fill" aria-selected="false">
+                            مشخصات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="second-tab-fill" data-toggle="tab" href="#second-fill" role="tab"
+                            aria-controls="second-fill" aria-selected="true">
+                            مدارک و آزمون
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="activity-tab-fill" data-toggle="tab" href="#activity-fill" role="tab"
+                            aria-controls="activity-fill" aria-selected="false">
+                            فعالیت ها و ارزیابی
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content pt-1">
+                    <div class="tab-pane active" id="information-fill" role="tabpanel" aria-labelledby="information-tab-fill">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card" style="border: 1px solid #eee; !important;">
+                                    <div class="card-header" style="border-bottom: 1px solid #eee;">
+                                        <div class="avatar m-0" style="margin-left: 8px !important;">
+                                            <img src="/assets/images/avatar.png" alt="avtar img holder"
+                                                height="32" width="32">
+                                        </div>
+                                        نام متقاضی
+                                        <div class="heading-elements mt-1">
+                                            <a href="#" class="dark"><i class="bx bx-edit-alt"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="card-body users-view">
+                                        <table class="table table-borderless line-height-2 table-interview-info">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 40px;"><i class="bx bx-envelope"></i></td>
+                                                    <td class="users-view-username">admin@gmail.com</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width: 40px;"><i class="bx bxs-phone"></i></td>
+                                                    <td class="users-view-name">09375654534</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width: 40px;"><i class="bx bx-group"></i></td>
+                                                    <td class="users-view-email">امین بقائی</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width: 40px;"><i class="bx bx-calendar"></i></td>
+                                                    <td class="users-view-email">1402/09/30</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="">تگ ها</label>
+                                    <select class="select2 form-control" multiple>
+                                        <option value="square">بک اند</option>
+                                        <option value="rectangle" selected>طراح سایت</option>
+                                        <option value="rombo">تدارکات</option>
+                                        <option value="romboid">کنترل کیفیت</option>
+                                        <option value="trapeze">مدیر ارشد</option>
+                                        <option value="traible" selected>دانشگاه سراسری</option>
+                                        <option value="polygon">کارگر خط تولید</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="second-fill" role="tabpanel" aria-labelledby="second-tab-fill">
+                        <div class="row pills-stacked">
+                            <div class="col-md-3 col-sm-12">
+                                <ul class="nav nav-pills flex-column text-center text-md-left">
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link active" id="stacked-pill-resume" data-toggle="pill"
+                                            href="#vertical-pill-resume" aria-expanded="true">
+                                            رزومه
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-docs" data-toggle="pill"
+                                            href="#vertical-pill-docs" aria-expanded="false">
+                                            مدارک
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-question" data-toggle="pill"
+                                            href="#vertical-pill-question" aria-expanded="false">
+                                            پرسشنامه
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-test" data-toggle="pill"
+                                            href="#vertical-pill-test" aria-expanded="false">
+                                            آزمون
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-9 col-sm-12">
+                                <div class="tab-content shadow-none mt-1 mt-md-0">
+                                    <!-- رزومه -->
+                                    <div role="tabpanel" class="tab-pane active" id="vertical-pill-resume"
+                                        aria-labelledby="stacked-pill-resume" aria-expanded="true">
+                                        
+                                    </div>
+                                    <!-- مدارک -->
+                                    <div class="tab-pane" id="vertical-pill-docs" role="tabpanel"
+                                        aria-labelledby="stacked-pill-docs" aria-expanded="false">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-1">
+                                                <fieldset>
+                                                    <div class="input-group">
+                                                        <select id="UploadDocs" class="form-control">
+                                                            <option value="">رزومه</option>
+                                                            <option value="">تصویر</option>
+                                                            <option value="">نمونه کار</option>
+                                                            <option value="">سایر مدارک</option>
+                                                        </select>
+                                                        <div class="input-group-append" id="button-upload-docs">
+                                                            <button class="btn btn-primary" type="button">آپلود مدارک</button>
+                                                        </div>
+                                                    </div>
+                                                </fieldset>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- پرسشنامه -->
+                                    <div class="tab-pane" id="vertical-pill-question" role="tabpanel"
+                                        aria-labelledby="stacked-pill-question" aria-expanded="false">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-1">
+                                                <fieldset>
+                                                    <div class="input-group">
+                                                        <select id="UploadQuestion" class="form-control">
+                                                            <option value="">ارسال پرسشنامه</option>
+                                                            <option value="">فرم تقاضای استخدام</option>
+                                                        </select>
+                                                        <div class="input-group-append" id="button-send-question">
+                                                            <button class="btn btn-primary" type="button">ارسال</button>
+                                                        </div>
+                                                    </div>
+                                                </fieldset>
+                                            </div>
+                                        </div>                                   
+                                    </div>
+                                    <!-- آزمون -->
+                                    <div class="tab-pane" id="vertical-pill-test" role="tabpanel"
+                                        aria-labelledby="stacked-pill-test" aria-expanded="false">
+                                        <div class="card shadow-none">
+                                            <div class="card-header pr-0 pl-0">
+                                                <div class="heading-elements" style="top: 0;">
+                                                    <button type="button" class="btn ml-auto mb-1 btn-outline-primary btn-sm add-task-btn" data-toggle="modal" data-target="#">افزایش اعتبار</button>
+                                                    <button type="button" class="btn ml-auto mb-1 btn-outline-success btn-sm add-task-btn" data-toggle="modal" data-target="#">ارسال آزمون جدید</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pl-0">
+                                                <div class="alert bg-rgba-primary alert-dismissible mb-2" role="alert">
+                                                    <div class="d-flex align-items-center">
+                                                        <span>
+                                                             برای این متقاضی آزمونی ارسال نشده است.
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="activity-fill" role="tabpanel" aria-labelledby="activity-tab-fill">
+                        <div class="row pills-stacked">
+                            <div class="col-md-3 col-sm-12">
+                                <ul class="nav nav-pills flex-column text-center text-md-left">
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link active" id="stacked-pill-notes" data-toggle="pill"
+                                            href="#vertical-pill-notes" aria-expanded="true">
+                                            یادداشت ها
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-2" data-toggle="pill"
+                                            href="#vertical-pill-2" aria-expanded="false">
+                                            ارزیابی
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-actives" data-toggle="pill"
+                                            href="#vertical-pill-actives" aria-expanded="false">
+                                            فعالیت ها
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-jobs" data-toggle="pill"
+                                            href="#vertical-pill-jobs" aria-expanded="false">
+                                            کار
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-interview" data-toggle="pill"
+                                            href="#vertical-pill-interview" aria-expanded="false">
+                                            مصاحبه
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-05">
+                                        <a class="nav-link" id="stacked-pill-history" data-toggle="pill"
+                                            href="#vertical-pill-history" aria-expanded="false">
+                                            پیشینه
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-9 col-sm-12">
+                                <div class="tab-content shadow-none mt-1 mt-md-0">
+                                    <!-- یادداشت ها -->
+                                    <div role="tabpanel" class="tab-pane active" id="vertical-pill-notes"
+                                        aria-labelledby="stacked-pill-notes" aria-expanded="true">
+                                        <fieldset class="form-label-group">
+                                            <textarea class="form-control" id="label-textarea" rows="3"
+                                                placeholder="متن یادداشت را وارد نمایید"></textarea>
+                                            <label for="label-textarea">متن یادداشت</label>
+                                        </fieldset>
+                                        <div class="custom-control custom-switch d-flex mr-2 mb-1">
+                                            <p class="mb-0 mr-1">ارسال ایمیل به</p>
+                                            <div class="btn-group btn-group-sm btn-group-toggle mb-1"
+                                                data-toggle="buttons">
+                                                <label class="btn btn-outline-primary active">
+                                                    <input type="radio" name="options" id="radio1" checked> من
+                                                </label>
+                                                <label class="btn btn-outline-primary">
+                                                    <input type="radio" name="options" id="radio2"> همه
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex">
+                                            <div class="custom-control custom-switch custom-control-inline mb-1">
+                                                <span class="mr-1">یادداشت محرمانه</span>
+                                                <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                                                <label class="custom-control-label mr-1" for="customSwitch1">
+                                                </label>
+                                            </div>
+
+                                            <button type="button" class="btn ml-auto mb-1 btn-success btn-sm">ثبت
+                                                یادداشت</button>
+                                        </div>
+
+                                        <div class="alert bg-rgba-primary alert-dismissible mb-2" role="alert">
+                                            <div class="d-flex align-items-center">
+                                                <span>
+                                                    تاکنون یادداشتی برای این متقاضی ثبت نشده است!
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <div class="avatar m-0" style="margin-left: 8px !important;">
+                                                    <img src="/assets/images/avatar.png" alt="avtar img holder"
+                                                        height="32" width="32">
+                                                </div>
+                                                امین بقائی
+                                                <span class="light ml-2">21/08/1402 20:12</span>
+
+                                                <div class="heading-elements mt-1">
+                                                    <a href="#" class="dark"><i class="bx bx-lock-open-alt"></i></a>
+                                                    <a href="#" class="dark"><i class="bx bx-edit-alt"></i></a>
+                                                    <a href="#" class="dark"><i class="bx bx-trash"></i></a>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <p>
+                                                    لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با
+                                                    استفاده از
+                                                    طراحان گرافیک است. چاپگرها و متون بلکه روزنامه و مجله در ستون و
+                                                    سطرآنچنان که
+                                                    لازم است و برای شرایط فعلی تکنولوژی مورد نیاز و کاربردهای متنوع با
+                                                    هدف</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- ارزیابی -->
+                                    <div class="tab-pane" id="vertical-pill-2" role="tabpanel"
+                                        aria-labelledby="stacked-pill-2" aria-expanded="false">
+                                        <p>
+                                            لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از
+                                            طراحان گرافیک است. چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که
+                                            لازم است و برای شرایط فعلی تکنولوژی مورد نیاز و کاربردهای متنوع با هدف</p>
+                                        <p>
+                                            لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از
+                                            طراحان گرافیک است. چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که
+                                            لازم است و برای شرایط فعلی تکنولوژی
+                                        </p>
+                                    </div>
+                                    <!-- فعالیت ها -->
+                                    <div class="tab-pane" id="vertical-pill-actives" role="tabpanel"
+                                        aria-labelledby="stacked-pill-actives" aria-expanded="false">
+
+                                        <div class="card shadow-none">
+                                            <div class="card-header p-0">
+                                                <div class="custom-control custom-switch d-flex mr-2 mb-1">
+                                                    <p class="mb-0 mr-1">نمایش فعالیت های</p>
+                                                    <div class="btn-group btn-group-sm btn-group-toggle mb-1"
+                                                        data-toggle="buttons">
+                                                        <label class="btn btn-outline-primary active">
+                                                            <input type="radio" name="options" id="radio1" checked> من
+                                                        </label>
+                                                        <label class="btn btn-outline-primary">
+                                                            <input type="radio" name="options" id="radio2"> همه
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pl-0" style="max-height: 400px;  overflow: auto;">
+                                                <div class="alert bg-rgba-primary alert-dismissible mb-2" role="alert">
+                                                    <div class="d-flex align-items-center">
+                                                        <span>
+                                                              اطلاعاتی جهت نمایش وجود ندارد.
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <blockquote class="blockquote pl-1 border-left-primary border-left-3">
+                                                    <div class="media">
+                                                        <div class="pr-1">
+                                                            <img src="/assets/images/avatar.png" alt="avtar img holder"
+                                                                height="32" width="32">
+                                                        </div>
+                                                        <div class="media-body line-height-2">
+                                                            امین بقائی یاددشت خود را برای سبیب سیبسیب حذف کرد.
+                                                        </div>
+                                                    </div>
+                                                    <footer class="text-right line-height-2 mt-25">
+                                                        21/08/1402 20:12
+                                                    </footer>
+                                                </blockquote>
+
+                                                <blockquote class="blockquote pl-1 border-left-primary border-left-3">
+                                                    <div class="media">
+                                                        <div class="pr-1">
+                                                            <img src="/assets/images/avatar.png" alt="avtar img holder"
+                                                                height="32" width="32">
+                                                        </div>
+                                                        <div class="media-body line-height-2">
+                                                            امین بقائی یاددشت خود را برای سبیب سیبسیب حذف کرد.
+                                                        </div>
+                                                    </div>
+                                                    <footer class="text-right line-height-2 mt-25">
+                                                        21/08/1402 20:12
+                                                    </footer>
+                                                </blockquote>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- کارها -->
+                                    <div class="tab-pane" id="vertical-pill-jobs" role="tabpanel"
+                                        aria-labelledby="stacked-pill-jobs" aria-expanded="false">
+
+                                        <div class="card shadow-none">
+                                            <div class="card-header p-0">
+                                                <div class="custom-control custom-switch d-flex mr-2 mb-1">
+                                                    <p class="mb-0 mr-1">نمایش کار های</p>
+                                                    <div class="btn-group btn-group-sm btn-group-toggle mb-1"
+                                                        data-toggle="buttons">
+                                                        <label class="btn btn-outline-primary active">
+                                                            <input type="radio" name="options" id="radio1" checked> من
+                                                        </label>
+                                                        <label class="btn btn-outline-primary">
+                                                            <input type="radio" name="options" id="radio2"> همه
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="heading-elements" style="top: 0;">
+                                                    <button type="button" class="btn ml-auto mb-1 btn-outline-success btn-sm add-task-btn" data-toggle="modal" data-target="#exampleModalNewJob">ایجاد کار جدید</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pl-0" style="max-height: 400px;  overflow: auto;">
+                                                <div class="alert bg-rgba-primary alert-dismissible mb-2" role="alert">
+                                                    <div class="d-flex align-items-center">
+                                                        <span>
+                                                              اطلاعاتی جهت نمایش وجود ندارد.
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- مصاحبه -->
+                                    <div class="tab-pane" id="vertical-pill-interview" role="tabpanel"
+                                        aria-labelledby="stacked-pill-interview" aria-expanded="false">
+
+                                        <div class="card shadow-none">
+                                            <div class="card-header pr-0 pl-0">
+                                                <div class="heading-elements" style="top: 0;">
+                                                    <button type="button" class="btn ml-auto mb-1 btn-outline-success btn-sm add-task-btn" data-toggle="modal" data-target="#exampleModalNewInterview">مصاحبه جدید</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pl-0">
+                                                <div class="alert bg-rgba-primary alert-dismissible mb-2" role="alert">
+                                                    <div class="d-flex align-items-center">
+                                                        <span>
+                                                             برای این متقاضی مصاحبه تنظیم نشده است.
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card" style="border: 1px solid #eee; !important;">
+                                                    <div class="card-header" style="border-bottom: 1px solid #eee;">
+                                                        <div class="avatar m-0" style="margin-left: 8px !important;">
+                                                            <img src="/assets/images/avatar.png" alt="avtar img holder"
+                                                                height="32" width="32">
+                                                        </div>
+                                                        جعفر پناهی - جهت مصاحبه حضوری
+                                                    </div>
+                                                    <div class="card-body users-view">
+                                                        <div class="d-flex" style="align-items: center;">
+                                                            <p class="mb-0">مصاحبه کنندگان:</p>
+                                                            <ul class="list-unstyled users-list m-0  d-flex align-items-center">
+                                                                <li data-toggle="tooltip" data-popup="tooltip-custom" data-placement="bottom" title="" class="avatar pull-up" data-original-title="عرفان افتخاری">
+                                                                    <img src="/assets/images/avatar.png" alt="Avatar" height="30" width="30">
+                                                                </li>
+                                                                <li data-toggle="tooltip" data-popup="tooltip-custom" data-placement="bottom" title="" class="avatar pull-up" data-original-title="نازنین یعقوبی">
+                                                                    <img src="/assets/images/avatar.png" alt="Avatar" height="30" width="30">
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                        <table class="table table-borderless line-height-2 table-interview-info">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>تاریخ ثبت:</td>
+                                                                    <td class="users-view-username">21/12/1402</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>تاریخ مصاحبه:</td>
+                                                                    <td class="users-view-name">21/12/1402</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>زمان مصاحبه:</td>
+                                                                    <td class="users-view-email">12:12</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- پیشینه -->
+                                    <div class="tab-pane" id="vertical-pill-history" role="tabpanel"
+                                        aria-labelledby="stacked-pill-history" aria-expanded="false">
+
+                                        <div class="card shadow-none">
+                                            <div class="card-header pr-0 pl-0">
+                                                <div class="heading-elements" style="top: 0;">
+                                                    <button type="button" class="btn ml-auto mb-1 btn-outline-success btn-sm add-task-btn" data-toggle="modal" data-target="#exampleModalNewHistory">پیشینه جدید</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body pl-0">
+                                                <div class="alert bg-rgba-primary alert-dismissible mb-2" role="alert">
+                                                    <div class="d-flex align-items-center">
+                                                        <span>
+                                                              اطلاعاتی جهت نمایش وجود ندارد.
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card" style="border: 1px solid #eee; !important;">
+                                                    <div class="card-header" style="border-bottom: 1px solid #eee;">
+                                                        <div class="avatar m-0" style="margin-left: 8px !important;">
+                                                            <img src="/assets/images/avatar.png" alt="avtar img holder"
+                                                                height="32" width="32">
+                                                        </div>
+                                                        امین بقائی
+                                                        <span class="ml-2">
+                                                            <i class="bx bx-like"></i> عالی
+                                                        </span>
+
+                                                        <div class="heading-elements mt-1">
+                                                            <a href="#" class="dark"><i class="bx bx-edit-alt"></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body users-view">
+                                                        <div class="d-flex" style="align-items: center;">
+                                                            <p class="mb-0 mr-1">شرح بازخورد:</p>
+                                                            <p class="mb-0">سیل سیبل ستنخیبلن شمکس شمبتشسیکخبه تش کخبشسمبنس</p>
+                                                        </div>
+                                                        <table class="table table-borderless line-height-2 table-interview-info">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>سمت:</td>
+                                                                    <td class="users-view-username">همکار</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>اطلاعات تماس:</td>
+                                                                    <td class="users-view-name">اراک - رجائی</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>تاریخ ثبت:</td>
+                                                                    <td class="users-view-email">12/12/1402</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                    <i class="bx bx-x d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">بستن</span>
+                </button>
+                <button type="button" class="btn btn-primary ml-1" data-dismiss="modal">
+                    <i class="bx bx-check d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">قبول</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Job Modal -->
+<div class="modal fade" id="exampleModalNewJob" tabindex="-1" role="dialog" aria-labelledby="exampleModalNewJobTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title white" id="exampleModalNewJobTitle">ایجاد کار جدید</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="بستن">
+                    <i class="bx bx-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="Members">تخصیص اعضا</label>
+                            <select id="Members" class="select2 form-control" multiple>
+                                <option value="">جعفر</option>
+                                <option value="">تقی</option>
+                                <option value="">قلی</option>
+                                <option value="">امین</option>
+                                <option value="">بیضی</option>
+                                <option value="">رضا</option>
+                                <option value="">آرش</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <fieldset class="form-group position-relative has-icon-left">
+							<input type="text" class="form-control shamsi-datepicker" placeholder="انتخاب تاریخ">
+							<div class="form-control-position">
+								<i class="bx bx-calendar"></i>
+							</div>
+						</fieldset>
+                    </div>
+                    <div class="col-md-12">
+                        <fieldset class="form-group">
+                            <label for="JobTitle">عنوان</label>
+                            <input type="text" class="form-control" id="JobTitle" placeholder="عنوان را وارد کنید">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-12">
+                        <fieldset class="form-label-group">
+                            <textarea class="form-control" id="label-textarea" rows="3" placeholder="توضیحات را وارد نمایید"></textarea>
+                            <label for="label-textarea">توضیحات</label>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                    <i class="bx bx-x d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">انصراف</span>
+                </button>
+                <button type="button" class="btn btn-success ml-1" data-dismiss="modal">
+                    <i class="bx bx-check d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">ذخیره</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Interview Modal -->
+<div class="modal fade" id="exampleModalNewInterview" tabindex="-1" role="dialog" aria-labelledby="exampleModalNewInterviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title white" id="exampleModalNewInterviewTitle">ایجاد مصاحبه جدید</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="بستن">
+                    <i class="bx bx-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="KindInterview">مصاحبه بصورت</label>
+                            <select id="KindInterview" class="form-control">
+                                <option value="">حضوری</option>
+                                <option value="">تصویری (مجازی)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="InterviewMembers">تخصیص اعضا</label>
+                            <select id="InterviewMembers" class="form-control select2" multiple >
+                                <option value="">جعفر</option>
+                                <option value="">تقی</option>
+                                <option value="">قلی</option>
+                                <option value="">امین</option>
+                                <option value="">بیضی</option>
+                                <option value="">رضا</option>
+                                <option value="">آرش</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="InterviewDate">تاریخ مصاحبه</label>
+                            <fieldset class="form-group position-relative has-icon-left">
+                                <input type="text" id="InterviewDate" class="form-control shamsi-datepicker" placeholder=" انتخاب تاریخ">
+                                <div class="form-control-position">
+                                    <i class="bx bx-calendar"></i>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="InterviewTime">زمان مصاحبه</label>
+                        <fieldset class="form-group position-relative has-icon-left">
+                            <input type="text" class="form-control pickatime" name="InterviewTime"
+                                placeholder="انتخاب زمان">
+                            <div class="form-control-position">
+                                <i class="bx bx-history"></i>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-12 mt-05">
+                        <fieldset class="form-label-group">
+                            <textarea class="form-control" id="label-textarea" rows="3" placeholder="متن پیام را وارد نمایید">
+سلام و وقت بخیر ضمن تشکر از ارسال رزومه برای درخواست شغلی شرکت گروه صنعتی پاک از شما دعوت شده است تا در مصاحبه استخدامی با این شرکت حضور پیدا کنید.
+
+تاریخ مصاحبه : 1402/10/08
+
+زمان مصاحبه : 08:00
+
+مکان : [[interview-place]]
+
+تیم منابع انسانی گروه صنعتی پاک
+پیشاپیش از حضور به موقع شما سپاسگزاری می‌گردد.
+                            </textarea>
+                            <label for="label-textarea">پیام</label>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                    <i class="bx bx-x d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">انصراف</span>
+                </button>
+                <button type="button" class="btn btn-success ml-1" data-dismiss="modal">
+                    <i class="bx bx-check d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">ارسال</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New History Modal -->
+<div class="modal fade" id="exampleModalNewHistory" tabindex="-1" role="dialog" aria-labelledby="exampleModalNewHistoryTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-success">
+                <h5 class="modal-title white" id="exampleModalNewHistoryTitle">ایجاد پیشینه جدید</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="بستن">
+                    <i class="bx bx-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <fieldset class="form-group">
+                            <label for="name">نام بازخورد دهنده</label>
+                            <input type="text" class="form-control" id="name" placeholder="نام بازخورد دهنده">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <fieldset class="form-group">
+                            <label for="relate">سمت / نوع رابطه با متقاضی</label>
+                            <input type="text" class="form-control" id="relate" placeholder="سمت / نوع">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-12">
+                        <fieldset class="form-group">
+                            <label for="contact">اطلاعات تماس بازخورد دهنده</label>
+                            <input type="text" class="form-control" id="contact" placeholder="اطلاعات تماس">
+                        </fieldset>
+                    </div>
+                    <div class="col-md-12 mt-05">
+                        <fieldset class="form-label-group">
+                            <textarea class="form-control" id="label-textarea" rows="3" placeholder="شرح بازخورد"></textarea>
+                            <label for="label-textarea">شرح بازخورد</label>
+                        </fieldset>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="rating">نظر نهایی</label>
+                            <select data-placeholder="نظر نهایی" class="select2-icons form-control" id="rating">
+                                <option value="perfect" data-icon="bx bx-like">عالی</option>
+                                <option value="good" data-icon="bx bx-like">خوب</option>
+                                <option value="notgood" data-icon="bx bx-dislike">خوب نیست</option>
+                                <option value="dontknow" data-icon="bx bx-question-mark">مطمئن نیستم</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                    <i class="bx bx-x d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">انصراف</span>
+                </button>
+                <button type="button" class="btn btn-success ml-1" data-dismiss="modal">
+                    <i class="bx bx-check d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">ذخیره</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/assets/vendors/js/pickers/pickadate/picker.js"></script>
+    <script src="~/assets/vendors/js/pickers/pickadate/picker.date.js"></script>
+    <script src="~/assets/vendors/js/pickers/pickadate/picker.time.js"></script>
+    <script src="~/assets/vendors/js/pickers/pickadate/legacy.js"></script>
+    <script src="~/assets/vendors/js/pickers/daterange/moment.min.js"></script>
+    <script src="~/assets/vendors/js/pickers/daterange/daterangepicker.js"></script>
+    <script src="~/assets/vendors/js/pickers/datepicker-jalali/bootstrap-datepicker.min.js"></script>
+    <script src="~/assets/vendors/js/pickers/datepicker-jalali/bootstrap-datepicker.fa.min.js"></script>
+    <script src="~/assets/js/scripts/pickers/dateTime/pick-a-datetime.js"></script>
+    <script src="~/assets/vendors/js/forms/select/select2.full.min.js"></script>
+    <script src="~/assets/js/scripts/forms/select/form-select2.js"></script>
+}

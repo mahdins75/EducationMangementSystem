@@ -1,0 +1,199 @@
+﻿@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+@inject IWalletService walletService;
+@inject IWalletClientService walletClientService
+@inject IUserService userService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        موارد جستجو
+    </div>
+    <div class="card-body">
+        <EditForm Model="searchModel" OnValidSubmit="@(() => search())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="row">
+
+                <div class="col-md-6">
+                    <label>@GetDisplayName(nameof(searchModel.User.UserName), "UserViewModel")</label>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                 JustifyContent="JustifyContent.Center" Gap="" class="">
+                        <RadzenLabel Component="DropDownFiltering" />
+                        <RadzenDropDown @ref=@WalletOwnerUserNameDropDownList
+                                        AllowFiltering="true"
+                                        Data=@WalletOwnerUserNameDropDownListData
+                                        TextProperty="Title"
+                                        ValueProperty="Value"
+                                        @bind-Value="searchModel.User.UserName"
+                                        Style="width: 100%; max-width: 400px;"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        FilterOperator="StringFilterOperator.StartsWith"
+                                        AllowClear="true"
+                                        Name="ClientApiId" />
+                    </RadzenStack>
+                </div>
+
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">جستجو</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+
+    RadzenDropDown<int?> InvoiceDropDownList = new();
+    RadzenDropDown<string> WalletOwnerUserNameDropDownList = new();
+    List<TransactionViewModel> transactions = new();
+    public List<SelectListItem> InvoiceDropDownData { get; set; }
+    public List<SelectListItemStringValue> WalletOwnerUserNameDropDownListData { get; set; }
+
+    [Parameter] public WalletViewModel searchModel { get; set; }
+
+    [Parameter] public RadzenDataGrid<WalletViewModel> grid { get; set; }
+
+    [Parameter] public EventCallback<WalletViewModel> OnValueChanged { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        WalletOwnerUserNameDropDownList = new();
+        WalletOwnerUserNameDropDownListData = new();
+
+
+        searchModel = new WalletViewModel();
+        searchModel.User = new();
+        var currentUser = await userService.GetUserInfoInTheLocalStorage();
+
+
+        var getAllOfMyUsers = await userService.GetAllUsers(new UserViewModel()
+        {
+        });
+
+        if (getAllOfMyUsers.IsSuccess)
+        {
+            WalletOwnerUserNameDropDownListData = getAllOfMyUsers.Entity.Select(x => new SelectListItemStringValue() { Title = x.UserName, Value = x.UserName }).ToList();
+        }
+
+        if (!getAllOfMyUsers.IsSuccess)
+        {
+            if ((getAllOfMyUsers.ErrorCode != null && getAllOfMyUsers.ErrorCode == "Unauthorized") || (getAllOfMyUsers.ErrorCode != null && getAllOfMyUsers.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", getAllOfMyUsers.Message, "error");
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    async Task search()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await walletService.GetAll(new WalletViewModel()
+        {
+            User = new UserViewModel() { UserName = searchModel.User.UserName }
+        }
+        );
+
+        await grid.Reload();
+
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private async Task UpdateValue()
+    {
+        await OnValueChanged.InvokeAsync(searchModel);
+    }
+
+    string GetDisplayName(string propertyName, string objectName)
+    {
+        if (objectName == "TransactionInvoiceViewModel")
+        {
+            var prop = typeof(TransactionInvoiceViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+
+            return propertyName;
+        }
+        else if (objectName == "GetAllOfMyClientsViewModel")
+        {
+            var prop = typeof(GetAllOfMyClientsViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+
+            return propertyName;
+        }
+        else if (objectName == "UserViewModel")
+        {
+            var prop = typeof(UserViewModel).GetProperty(propertyName);
+            if (prop != null)
+            {
+                var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+                if (displayAttr != null)
+                {
+                    return displayAttr.Name;
+                }
+            }
+
+            return propertyName;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+
+}

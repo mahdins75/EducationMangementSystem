@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MStech.Wallet.DataBase\MStech.Wallet.DataBase.csproj" />
+    <ProjectReference Include="..\Mstech.Wallet.Common\Mstech.Wallet.Common.csproj" />
+    <ProjectReference Include="..\MStech.Wallet.ViewModel\MStech.Wallet.ViewModel.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.*" />
+    <PackageReference Include="RestSharp" Version="112.1.0" />
+  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

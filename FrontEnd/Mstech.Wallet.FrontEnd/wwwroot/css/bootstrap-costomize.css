@@ -1,0 +1,11 @@
+﻿.btn,
+.dropdown-menu,
+.form-control,
+.form-select {
+    font-size: inherit;
+}
+
+
+.form-floating [type=number] {
+    direction: rtl;
+}

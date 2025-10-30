@@ -1,0 +1,83 @@
+﻿@page "/Membership/UserProfile/Index"
+@using Mstech.FrontEnd.Wallet.ViewModel
+
+@inject IJSRuntime JS
+
+@inject IUserService userService
+
+@inject IDynamicTitleService dynamicTitleService
+
+@inject IGetDropDownDataService getDropDownDataService
+
+@inject NavigationManager NavigationManager
+
+@inject SweetAlertService SweetAlert
+
+<div class="content">
+    <div class="row">
+        <div class="col-12">
+
+            <UserProfileEdit @ref="editComponentRef" userId="UserId" />
+        </div>
+    </div>
+</div>
+
+@code {
+
+    List<UserViewModel> Users = new();
+
+    private UserProfileEdit editComponentRef { get; set; }
+
+    private string UserId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUserInLocalStorage = await userService.GetUserInfoInTheLocalStorage();
+
+        UserId = currentUserInLocalStorage.Entity.Id;
+        await editComponentRef.LoadSingleForEdit(UserId);
+        var pageTitle = await dynamicTitleService.GetPageTitle("User");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        StateHasChanged();
+    }
+
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(UserViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName;
+    }
+
+    private async Task CheckResultStatus<Request>(ResponseViewModel<Request> result)
+    {
+        if (!result.IsSuccess)
+        {
+
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbidden"))
+            {
+                var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+
+                if (currentPath.ToLower() != "/Membership/Login".ToLower() && currentPath.ToLower() != "/Membership/Register".ToLower())
+                {
+                    NavigationManager.NavigateTo("/membership/Login");
+                }
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+            }
+
+        }
+    }
+
+}

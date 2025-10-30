@@ -1,0 +1,266 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <link rel="preconnect" href="//fdn.fontcdn.ir">
+    <link rel="preconnect" href="//v1.fontapi.ir">
+    <link href="https://v1.fontapi.ir/css/Yekan" rel="stylesheet">
+    <style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+    margin: 0;
+}
+body {
+    margin: 0;
+    padding: 0;
+}
+.main {
+    padding: 80px 48px;
+}
+
+.main-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0px 2px 4px 0px rgba(165, 163, 174, 0.30);
+    max-width: 545px;
+    z-index: 9;
+    text-align: right;
+    margin: auto;
+}
+.main-content-header {
+    height: 95px;
+    text-align: center;
+}
+.main-content-header img {
+    margin-top: 36px;
+}
+.main-content-vector {
+    text-align: center;
+}
+.main-content-vector img {
+    height: 180px;
+}
+.main-content-body {
+    padding: 40px;
+    align-items: flex-start;
+    gap: 12px;
+    align-self: stretch;
+}
+h5.email-title {
+    font-family: Yekan, sans-serif;
+    font-weight: 600;
+    color: #3a62d1;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    text-align: center;
+    width: 100%;
+}
+h6.user-name {
+    font-family: Yekan, sans-serif;
+    font-weight: 600;
+    color: #5D586C;
+    font-size: 1rem;
+    padding-top: 15px;
+}
+p.email-description {
+    font-family: Yekan, sans-serif;
+    font-weight: 400;
+    color: #6F6B7D;
+    padding-top: 12px;
+    font-size: 1rem;
+    line-height: 26px;
+}
+.content-link {
+    width: 100%;
+    text-align: center;
+    padding-top: 12px;
+}
+.btn-link{
+			font-family:Yekan, sans-serif;
+			font-weight:600;
+            padding:13px 30px;
+            margin-top: 18px;
+            margin-bottom: 18px;
+			background-color:#0933DF;
+			color:#fff;
+			border-radius:4px;
+			text-decoration:none;
+			font-size:0.875rem;
+			display:inline-block;
+			box-shadow:0px 2px 4px 0px rgba(165, 163, 174, 0.30);
+			transition:.3s;
+		}
+.btn-link:hover {
+    background-color: #082EC9;
+}
+.email-signature p {
+    font-family: Yekan, sans-serif;
+    font-weight: 600;
+    color: #6F6B7D;
+    font-size: 0.875rem;
+    margin-bottom: 4px;
+}
+.email-signature {
+    padding-top: 15px;
+}
+/* footer */
+.email-footer {
+    display: grid;
+    text-align: center;
+    padding: 24px 12px 0 12px;
+    max-width: 545px;
+    margin: auto;
+}
+.footer-nav {
+    display: flex;
+    list-style: none;
+    margin: auto;
+    padding-left: 0;
+    margin-bottom: 18px;
+}
+.footer-nav-mobile{
+    display: none;
+    margin-left: auto !important;
+  margin-right: auto !important;
+}
+.footer-nav li {
+    margin: 0 6px;
+}
+.footer-nav li a,.footer-nav-mobile a {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 700;
+    color: #6F6B7D;
+    font-size: 0.875rem;
+    text-decoration: none;
+}
+p.copyright, .unsub-box p {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 400;
+    color: #A5A2AD;
+    margin-bottom: 18px;
+    font-size: 0.875rem;
+    line-height: 20px;
+}
+.unsub-box p {
+    margin-top: 18px;
+}
+.unsub-box a {
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 400;
+    color: #6F6B7D;
+    font-size: 0.875rem;
+}
+.footer-end {
+    display: flex;
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+.footer-end li.footer-logo {
+    margin-right: auto;
+}
+ul.social {
+    list-style: none;
+    display: flex;
+    padding-left: 0;
+}
+ul.social li {
+    margin: 0 8px;
+}
+ul.social li img {
+    width: 24px;
+}
+/* resopnsive */
+@@media (max-width: 640px) {
+    .email-footer {
+        padding: 24px 0 0 0;
+    }
+}
+@@media (max-width: 585px) {
+    .main {
+        padding: 36px 12px !important;
+    }
+}
+@@media (max-width: 488px) {
+    .footer-nav {
+        display: none !important;
+    }
+    .footer-nav-mobile{
+        display: block !important;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 0;
+        margin-bottom: 18px;
+    }
+}
+@@media (max-width: 420px) {
+    .main-content-body {
+        padding: 40px 20px;
+    }
+}
+@@media (max-width: 375px) {
+    .footer-nav li {
+        margin: 0 6px 8px 6px;
+    }
+    ul.social li {
+        margin: 0 2px;
+    }
+}
+    </style>
+</head>
+<body style="background-image: url(img/Email-bg.png);background-repeat: no-repeat;
+background-size: 100% 240px;
+background-color: #EAEBF0;">
+
+    <div class="header-template"></div>
+    <div class="main">
+        <div class="main-content">
+
+            <div class="main-content-header">
+                <img src="/assets/images/logo.jpg" >
+            </div>
+
+            <div class="main-content-body">
+                <h5 class="email-title">فراموشی رمز عبور</h5>
+
+                <h6 class="user-name">کاربر گرامی</h6>
+
+                <p class="email-description">We need to verify that you are the owner of the email address [email address] before we can proceed with your request.</p>
+                <p class="email-description">Please click on the link below or copy and paste it into your browser to verify your email address:</p>
+
+                <div class="content-link">
+                    <a href="#" target="_blank" class="btn-link" style="color: #fff;">Verify Email</a>
+                </div>
+
+                <p class="email-description">This link will expire in 24 hours. Once you have verified your email address, we can continue processing your request.</p>
+                <p class="email-description">Please let us know if you have any trouble accessing the verification link. We apologize for this extra step, but it's necessary for security purposes.</p>
+                <p class="email-description">Thank you for your patience and cooperation. We look forward to completing your request soon.</p>
+
+                <div class="email-signature">
+                    <p>Sincerely,</p>
+                    <p>[Your name]</p>
+                    <p>Auto Job Apply</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="email-footer">
+            <div class="unsub-box">
+                <a href="">Powered by PAC</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,85 @@
+﻿<table id="Constant_Table" class="table table-hover table-bordered text-center mb-0">
+    <thead class="thead-dark">
+        <tr>
+            <th>عنوان</th>
+            <th>اقدامات</th>
+        </tr>
+    </thead>
+</table>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var constantDataTable;
+        loadConstantDataTable();
+    });
+
+    function loadConstantDataTable() {
+        constantDataTable = $('#Constant_Table').DataTable({
+            "bAutoWidth": false,
+            "processing": true,
+            "serverSide": true,
+            "searching": false,
+            "ajax": function (data, callback, settings) {  // Make the Ajax call ourselves
+                $.ajax({
+                    url: '@Url.Action("ConstantDataTable", "Constant", new { Area = "Admin" })',
+                    type: "POST",
+                    async: true,
+                    dataType: "json",
+                    data: {
+                        columns: data.columns, // Needed for paging
+                        draw: data.draw, // Needed for paging
+                        length: data.length, // Needed for paging
+                        order: data.order, // Needed for paging
+                        search: data.search, // Needed for paging
+                        start: data.start, // Needed for paging
+                        filter: getFilterConstantDataTable()
+                    }
+                }).done(function (data, textStatus, jqXHR) {
+                    callback(data);
+                })
+            },
+            "columns": [
+                {
+                    "name": "Name",
+                    "data": "name",
+                    "orderable": true,
+                    "searchable": false,
+                    "class": "text-left",
+                },
+                {
+                    "name": "operationColumn",
+                    "data": null,
+                    "orderable": false,
+                    "searchable": false,
+                    "defaultContent": "",
+                    "class": "col-operation"
+                }
+            ],
+            "rowCallback": function (row, data, index) {
+                var btnEdit = btnDelete = '';
+                btnEdit = "<a href='#' id='btnEdit-" + data.id + "' data-id='" + data.id + "' title='ویرایش'><i class='badge-circle badge-circle-light-secondary bx bx-edit-alt font-medium-1'></i></a>";
+                btnDelete = "<a href='#' id='btnDelete-" + data.id + "' data-id='" + data.id + "' title='حذف'><i class='badge-circle badge-circle-light-secondary bx bx-trash font-medium-1'></i></a>";
+                $(row).children('td.col-operation').append(btnEdit + btnDelete );
+            }
+        });
+    }
+
+    function getFilterConstantDataTable() {
+        var filter = {
+            "Name": $('#Constant_Index input[name=Name]').val(),
+            "EntityName": $('#Constant_Index input[name=EntityName]').val()
+        };
+        return filter;
+    }
+
+    function resetFilterConstantDataTable() {
+        $('#Constant_Index input[name=Name]').val("");
+    }
+
+    function reloadConstantDataTable() {
+        constantDataTable.ajax.reload();
+    }
+
+</script>
