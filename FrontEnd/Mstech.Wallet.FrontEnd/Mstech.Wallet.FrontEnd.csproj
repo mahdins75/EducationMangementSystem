@@ -11,8 +11,8 @@
 	<ItemGroup>
 		<PackageReference Include="Blazor.Bootstrap" Version="3.0.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.1" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.*" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.*" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
 		<PackageReference Include="SweetAlert" Version="1.0.0" />
 	</ItemGroup>
@@ -20,10 +20,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Mstech.Frontend.Wallet.Servies\Mstech.Frontend.Wallet.Service.csproj" />
 		<ProjectReference Include="..\Mstech.Frontend.wallet.ViewModel\Mstech.Frontend.Wallet.ViewModel.csproj" />
-		<ProjectReference Include="..\lAZY\Mstech.Wallet.WalletInfo\Mstech.Wallet.WalletInfo.csproj" />
-		<ProjectReference Include="..\lAZY\Msterch.FrontEnd.Membership\Mstech.FrontEnd.Membership.csproj" />
-		<ProjectReference Include="..\lAZY\Mstech.FrontEnd.Transaction\Mstech.FrontEnd.Transaction.csproj" />
-		<ProjectReference Include="..\lAZY\Mstech.FrontEnd.Management\Mstech.FrontEnd.Management.csproj" />
+		<ProjectReference Include="..\Lazy\Mstech.Wallet.WalletInfo\Mstech.Wallet.WalletInfo.csproj" />
+		<ProjectReference Include="..\Lazy\Msterch.FrontEnd.Membership\Mstech.FrontEnd.Membership.csproj" />
+		<ProjectReference Include="..\Lazy\Mstech.FrontEnd.Transaction\Mstech.FrontEnd.Transaction.csproj" />
+		<ProjectReference Include="..\Lazy\Mstech.FrontEnd.Management\Mstech.FrontEnd.Management.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<BlazorWebAssemblyLazyLoad Include="Mstech.Wallet.WalletInfo.wasm" />

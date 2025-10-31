@@ -6,7 +6,7 @@
     <UseBlazorWebAssembly>true</UseBlazorWebAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\lAZY\Mstech.Wallet.Components\Mstech.Wallet.Components.csproj" />
+    <ProjectReference Include="..\Lazy\Mstech.Wallet.Components\Mstech.Wallet.Components.csproj" />
     <ProjectReference Include="..\Mstech.Wallet.Common\Mstech.Wallet.Common.csproj" />
   </ItemGroup>
   <ItemGroup>

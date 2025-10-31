@@ -9,8 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="DNTCaptcha.Blazor" Version="1.2.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.14" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.*" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Mstech.Frontend.Wallet.Servies\Mstech.Frontend.Wallet.Service.csproj" />
