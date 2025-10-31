@@ -1,0 +1,75 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using Common.Persian;
+
+namespace Common.Gaurd
+{
+
+    public static class GaurdExts
+    {
+        /// <summary>
+        /// Checks if the argument is null.
+        /// </summary>
+        public static void CheckArgumentIsNull(this object o, string name) {
+            if (o == null)
+                throw new ArgumentNullException(name);
+        }
+
+        /// <summary>
+        /// Check if reference of an object is null.
+        /// </summary>
+        /// <param name="o">Object to check </param>
+        /// <param name="name">name of the object</param>
+        /// <exception cref="NullReferenceException"></exception>
+        public static void CheckReferenceIsNull(this object o, string name) {
+            if (o == null)
+                throw new NullReferenceException(name);
+        }
+
+        /// <summary>
+        /// Checks if the parameter is null.
+        /// </summary>
+        public static void CheckMandatoryOption(this string s, string name) {
+            if (string.IsNullOrEmpty(s))
+                throw new ArgumentException(name);
+        }
+
+
+        public static bool IsNullOrEmpty(this string s)
+            => string.IsNullOrWhiteSpace(s);
+
+        public static bool IsNotNullOrEmpty(this string s)
+            => !string.IsNullOrWhiteSpace(s);
+
+        public static bool ContainsNumber(this string inputText) {
+            return !string.IsNullOrWhiteSpace(inputText) && inputText.ToEnglishNumbers().Any(char.IsDigit);
+        }
+
+        public static bool HasConsecutiveChars(this string inputText, int sequenceLength = 3) {
+            var charEnumerator = StringInfo.GetTextElementEnumerator(inputText);
+            var currentElement = string.Empty;
+            var count = 1;
+            while (charEnumerator.MoveNext()) {
+                if (currentElement == charEnumerator.GetTextElement()) {
+                    if (++count >= sequenceLength) {
+                        return true;
+                    }
+                }
+                else {
+                    count = 1;
+                    currentElement = charEnumerator.GetTextElement();
+                }
+            }
+            return false;
+        }
+
+        public static bool IsEmailAddress(this string inputText) {
+            return !string.IsNullOrWhiteSpace(inputText) && new EmailAddressAttribute().IsValid(inputText);
+        }
+
+        public static bool IsNumeric(this string inputText) {
+            if (string.IsNullOrWhiteSpace(inputText)) return false;
+            return long.TryParse(inputText.ToEnglishNumbers(), out _);
+        }
+    }
+}

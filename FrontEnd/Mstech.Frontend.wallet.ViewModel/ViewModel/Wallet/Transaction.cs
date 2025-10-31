@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Mstech.Wallet.Components;
+using Mstech.Wallet.Common;
 namespace Mstech.Frontend.Wallet.ViewModel.DTO;
+
 
 public class TransactionViewModel
 {

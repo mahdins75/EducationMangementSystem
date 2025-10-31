@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
 public class HomeController : BaseController
 {
+
+    
     public HomeController()
     {
     }
