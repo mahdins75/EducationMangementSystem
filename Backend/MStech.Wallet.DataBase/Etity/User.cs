@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
+using MStech.Wallet.DataBase.Etity.Class;
 using MStech.Wallet.DataBase.Etity.Client;
+using MStech.Wallet.DataBase.Etity.StudentActivity;
 using MStech.Wallet.DataBase.Etity.Wallet;
 
 namespace Mstech.Entity.Etity
@@ -28,5 +30,9 @@ namespace Mstech.Entity.Etity
         public ICollection<ReferralCode> ReferralCodes { get; set; }
         public ICollection<DiscountCode> DiscountCodes { get; set; }
         public ICollection<DiscountCodeBank> DiscountCodeBanks { get; set; }
+        public ICollection<StudentActivity> StudentActivities  { get; set; }
+        public ICollection<InstitutionClass> InstitutionClasses   { get; set; }
+
+
     }
 }

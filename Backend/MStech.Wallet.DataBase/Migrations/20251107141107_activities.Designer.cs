@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mstech.Accounting.Data;
 
@@ -11,9 +12,11 @@ using Mstech.Accounting.Data;
 namespace MStech.Wallet.DataBase.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251107141107_activities")]
+    partial class activities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,47 +253,6 @@ namespace MStech.Wallet.DataBase.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Institutions", (string)null);
-                });
-
-            modelBuilder.Entity("MStech.Wallet.DataBase.Etity.Institution.InstitutionDocument", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("InstitutionClassId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifierId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ModifyDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("OwnerId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InstitutionClassId");
-
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("InstitutionDocuments", (string)null);
                 });
 
             modelBuilder.Entity("MStech.Wallet.DataBase.Etity.StudentActivity.StudentActivity", b =>
@@ -1377,23 +1339,6 @@ namespace MStech.Wallet.DataBase.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("MStech.Wallet.DataBase.Etity.Institution.InstitutionDocument", b =>
-                {
-                    b.HasOne("MStech.Wallet.DataBase.Etity.Class.InstitutionClass", "InstitutionClass")
-                        .WithMany("InstitutionDocuments")
-                        .HasForeignKey("InstitutionClassId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Mstech.Entity.Etity.User", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId");
-
-                    b.Navigation("InstitutionClass");
-
-                    b.Navigation("Owner");
-                });
-
             modelBuilder.Entity("MStech.Wallet.DataBase.Etity.StudentActivity.StudentActivity", b =>
                 {
                     b.HasOne("MStech.Wallet.DataBase.Etity.Class.InstitutionClass", "Class")
@@ -1676,8 +1621,6 @@ namespace MStech.Wallet.DataBase.Migrations
             modelBuilder.Entity("MStech.Wallet.DataBase.Etity.Class.InstitutionClass", b =>
                 {
                     b.Navigation("Classes");
-
-                    b.Navigation("InstitutionDocuments");
                 });
 
             modelBuilder.Entity("MStech.Wallet.DataBase.Etity.Client.WalletClient", b =>

@@ -17,6 +17,8 @@ namespace DataBase.EntityMaps
             entityBuilder.HasMany(m => m.DiscountCodes).WithOne(m => m.User).HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Restrict);
             entityBuilder.HasMany(m => m.Wallets).WithOne(m => m.User).HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Restrict);
             entityBuilder.HasMany(m => m.Clients).WithOne(m => m.Owner).HasForeignKey(m => m.OwnerId).OnDelete(DeleteBehavior.Restrict);
+            entityBuilder.HasMany(m => m.StudentActivities).WithOne(m => m.Student).HasForeignKey(m => m.StudentId).OnDelete(DeleteBehavior.Restrict);
+            entityBuilder.HasMany(m => m.InstitutionClasses).WithOne(m => m.Teacher).HasForeignKey(m => m.TeacherId).OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
