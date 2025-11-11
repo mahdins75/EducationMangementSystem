@@ -24,12 +24,14 @@
 		<ProjectReference Include="..\Lazy\Msterch.FrontEnd.Membership\Mstech.FrontEnd.Membership.csproj" />
 		<ProjectReference Include="..\Lazy\Mstech.FrontEnd.Transaction\Mstech.FrontEnd.Transaction.csproj" />
 		<ProjectReference Include="..\Lazy\Mstech.FrontEnd.Management\Mstech.FrontEnd.Management.csproj" />
+		<ProjectReference Include="..\Lazy\Mstech.FrontEnd.Management\Mstech.FrontEnd.Institution.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<BlazorWebAssemblyLazyLoad Include="Mstech.Wallet.WalletInfo.wasm" />
 		<BlazorWebAssemblyLazyLoad Include="Mstech.FrontEnd.Membership.wasm" />
 		<BlazorWebAssemblyLazyLoad Include="Mstech.FrontEnd.Transaction.wasm" />
 		<BlazorWebAssemblyLazyLoad Include="Mstech.FrontEnd.Management.wasm" />
+		<BlazorWebAssemblyLazyLoad Include="Mstech.FrontEnd.Institution.wasm" />
 	</ItemGroup>
 	<ItemGroup>
 		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />

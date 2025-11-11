@@ -1,0 +1,176 @@
+﻿@page "/Membership/User/create"
+@using Mstech.Frontend.Wallet.Service.Implementation.Institution
+@using Mstech.Frontend.Wallet.Service.Interface.Institution
+
+@inject IInstitutionService institutionService
+@inject IUserService userService
+@inject IGetDropDownDataService getDropDownDataService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        افزودن موسسه جدید
+    </div>
+    <div class="card-body">
+        <EditForm Model="newUser" OnValidSubmit="@(() => AddUser())">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.Name))</label>
+                    <InputText class="form-control" @bind-Value="newUser.Name" />
+                    <ValidationMessage For="@(() => newUser.Name)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.LastName))</label>
+                    <InputText class="form-control" @bind-Value="newUser.LastName" />
+                    <ValidationMessage For="@(() => newUser.LastName)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.UserName))</label>
+                    <InputText class="form-control" @bind-Value="newUser.UserName" />
+                    <ValidationMessage For="@(() => newUser.UserName)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.PhoneNumber))</label>
+                    <InputText class="form-control" @bind-Value="newUser.PhoneNumber" />
+                    <ValidationMessage For="@(() => newUser.PhoneNumber)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.Password))</label>
+                    <InputText type="password" class="form-control" @bind-Value="newUser.Password" />
+                    <ValidationMessage For="@(() => newUser.Password)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.ConfirmPassword))</label>
+                    <InputText type="password" class="form-control" @bind-Value="newUser.ConfirmPassword" />
+                    <ValidationMessage For="@(() => newUser.ConfirmPassword)" />
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.Address))</label>
+                    <InputTextArea class="form-control" @bind-Value="newUser.Address" />
+                </div>
+
+            </div>
+            <!-- Save Button -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">ذخیره تغییرات</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary"
+                                   Value="100"
+                                   ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+
+    RadzenDropDown<int> statusDropDown = new();
+
+    RadzenDropDown<string> ownerDropDown = new();
+
+    List<InstitutionViewModel> Institutions  = new();
+
+    [Parameter]
+    public InstitutionViewModel newInstitution { get; set; }
+
+    [Parameter]
+    public List<SelectListItemStringValue> ownerDropDownData { get; set; }
+
+    [Parameter]
+    public RadzenDataGrid<InstitutionViewModel> grid { get; set; }
+
+    private string modalDisplayClass = "";
+
+    private string modalStyle = "none !important";
+
+    int count;
+
+    bool isLoading = false;
+
+    private bool isProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        newUser = new();
+        statusDropDownData = new();
+        ownerDropDownData = new();
+        StateHasChanged();
+    }
+    async Task AddInstitution()
+    {
+        if (isProcessing) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        var result = await institutionService.Create(new InstitutionViewModel
+            {
+               Name=  newInstitution.Name,
+               Phone=newInstitution.Phone,
+               Address=newInstitution.Address,
+               Description=newInstitution.Description,
+               Email=newInstitution.Email,
+               Website=newInstitution.Website,
+               OwnerUserName=userService.GetUserInfoInTheLocalStorage().Result.Entity.UserName,
+            });
+        if (!result.IsSuccess)
+        {
+            if ((result.ErrorCode != null && result.ErrorCode == "Unauthorized") || (result.ErrorCode != null && result.ErrorCode == "Forbiden"))
+            {
+                NavigationManager.NavigateTo("");
+
+            }
+            else
+            {
+                await SweetAlert.ShowAlert("خطا !", result.Message, "error");
+
+            }
+
+        }
+        else
+        {
+            newUser = new InstitutionViewModel();
+        }
+
+        isProcessing = false;
+        StateHasChanged();
+        await grid.Reload();
+    }
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(InstitutionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+        return propertyName; // Fallback to property name if Display is not set
+    }
+
+
+
+
+
+}

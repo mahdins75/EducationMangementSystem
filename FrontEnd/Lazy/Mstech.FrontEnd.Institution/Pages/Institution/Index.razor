@@ -1,0 +1,191 @@
+@page "/Management/Institution/Index"
+
+@using System.ComponentModel
+@using System.ComponentModel.DataAnnotations
+@using Mstech.Frontend.Wallet.Service.Implementation.Membership
+@using Mstech.Frontend.Wallet.Service.Interface.Institution
+@using Mstech.Frontend.Wallet.Service.Interface.TransactionRequest
+@using Mstech.Frontend.Wallet.Service.Interface.WalletClient
+
+
+@inject IInstitutionService InstitutionService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject SweetAlertService SweetAlert
+@inject UserService userService
+
+@inject DynamicTitleService dynamicTitleService
+
+<div class="content m-4">
+    <div class="row">
+        <div class="col-12">
+            <Create grid="grid" newInstitution="newInstitution" />
+            <div class="card">
+                <div class="card-header">
+                    <span class="font-weight-bold"></span>لیست موسسات موجود در سیستم <span></span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h5 class="fw-bold">مبلغ کل درخواست های خروج</h5>
+                            <span>ريال</span>
+                            <span class="fs-3 fw-bold">@WalletBalance</span>
+                        </div>
+                    </div>
+
+                    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count"
+                        Data="@TransactionRequests" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true"
+                        AllowPaging="true" PageSize="4" PagerHorizontalAlign="HorizontalAlign.Center"
+                        ColumnWidth="200px">
+                        <Columns>
+                            <RadzenDataGridColumn Width="50px" Title="#" Filterable="false" Sortable="false"
+                                TextAlign="TextAlign.Center">
+                                <Template Context="data">
+                                    @(TransactionRequests.IndexOf(data) + 1)
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.Name)" Filterable="false"
+                                Title="@GetDisplayName(nameof(InstitutionViewModel.Description))" Width="80px"
+                                TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.Address)" Filterable="false"
+                                Title="@GetDisplayName(nameof(InstitutionViewModel.Address))" Width="80px"
+                                TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.Phone)" Filterable="false"
+                                Title="@GetDisplayName(nameof(InstitutionViewModel.Phone))" Width="80px"
+                                TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.Email)" Filterable="false"
+                                Title="@GetDisplayName(nameof(InstitutionViewModel.Email))" Width="80px"
+                                TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.Website)" Filterable="false"
+                                Title="@GetDisplayName(nameof(InstitutionViewModel.Website))" Width="80px"
+                                TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.OwnerFullName)"
+                                Filterable="false" Title="@GetDisplayName(nameof(InstitutionViewModel.OwnerFullName))"
+                                Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Property="@nameof(InstitutionViewModel.ClassesCount)"
+                                Filterable="false" Title="@GetDisplayName(nameof(InstitutionViewModel.ClassesCount))"
+                                Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn TItem="InstitutionViewModel" Width="120px"
+                                TextAlign="TextAlign.Center" Title="عملیات">
+                                <Template Context="data">
+                                    <RadzenButton ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small"
+                                        Icon="check_circle" Text="تایید اولیه تسویه"
+                                        Click="@(() => ApproveRequest(data))" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<br />
+
+
+
+@if (isProcessing)
+{
+    <div class="loading-overlay">
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false"
+            Mode="ProgressBarMode.Indeterminate" />
+        <div class="loading-text">لطفا صبر کنید...</div>
+    </div>
+}
+
+@code {
+
+    RadzenDataGrid<InstitutionViewModel> grid = new();
+    List<InstitutionViewModel> TransactionRequests = new();
+    public InstitutionViewModel searchModel { get; set; }
+    public InstitutionViewModel newInstitution { get; set; }
+
+    private string modalDisplayClass = "";
+    private string modalStyle = "none !important";
+    int count;
+    private decimal WalletBalance;
+    bool isLoading = false;
+    private bool isProcessing = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        searchModel = new();
+        var pageTitle = await dynamicTitleService.GetPageTitle("TransactionRequest");
+        await JS.InvokeVoidAsync("setTitle", pageTitle);
+
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+
+        await LoadData(new LoadDataArgs() { Top = 4, Skip = 0 });
+
+        StateHasChanged();
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        var currentUser = await userService.GetUserInfoInTheLocalStorage();
+
+        isLoading = true;
+        isProcessing = true;
+        StateHasChanged();
+
+        await Task.Yield();
+
+        var query = await InstitutionService.GetAll(new InstitutionViewModel()
+        {
+            OwnerUserName = currentUser.Entity.UserName,
+            PageSize = args.Top.Value,
+            Skip = args.Skip.Value,
+            IsPagination = true,
+        });
+
+        if (query?.Entity != null)
+        {
+            count = query.QueryCount;
+            TransactionRequests = query.Entity.ToList();
+        }
+        else
+        {
+            count = 0;
+            TransactionRequests = new List<InstitutionViewModel>(); // Empty list if data is null
+        }
+
+        if (query.Entity != null)
+        {
+            TransactionRequests = query.Entity.ToList();
+        }
+
+
+        isLoading = false;
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+    private void UpdateParentValue(InstitutionViewModel model)
+    {
+        searchModel = model;
+    }
+
+    string GetDisplayName(string propertyName)
+    {
+        var prop = typeof(InstitutionViewModel).GetProperty(propertyName);
+        if (prop != null)
+        {
+            var displayAttr = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+            if (displayAttr != null)
+            {
+                return displayAttr.Name;
+            }
+        }
+
+        return propertyName; // Fallback to property name if Display is not set
+    }
+    private async Task ApproveRequest(InstitutionViewModel transaction)
+    {
+        // TODO: Implement approval logic
+        await LoadData(new LoadDataArgs());
+    }
+}

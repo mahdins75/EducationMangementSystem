@@ -30,10 +30,10 @@ namespace Mstech.ADV.Controllers
         }
 
         [HttpGet("bystudent/{studentId}")]
-        public async Task<IActionResult> GetByStudentId(int studentId)
+        public async Task<IActionResult> GetByStudentId(string studentId)
         {
             // Create a model to search by student ID
-            var model = new StudentActivityViewModel { StudentId = studentId.ToString() };
+            var model = new StudentActivityViewModel { StudentId = studentId };
             var result = await _studentActivityService.GetAll(model);
             return Ok(new ResponseViewModel<List<StudentActivityViewModel>>
             {
@@ -147,13 +147,13 @@ namespace Mstech.ADV.Controllers
             var result = await _studentActivityService.GetAll(model);
             return Ok(new ResponseViewModel<List<StudentActivityViewModel>>
             {
-                IsSuccess   = result.Success,
+                IsSuccess = result.Success,
                 Message = result.Message,
                 Entity = result.Entity,
-                QueryCount= result.Count
+                QueryCount = result.Count
             });
         }
     }
 
-    
+
 }

@@ -13,6 +13,7 @@ using Mstech.Accounting.Data;
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 var seedData = new SeedData();
+// Database Configuration
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -67,7 +68,16 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     .AddDefaultTokenProviders();
 
 
-// Configure JWT Authentication
+// پیکربندی احراز هویت JWT
+// تنظیمات احراز هویت JWT (توکن وب JSON) برای ایمن‌سازی نقاط پایانی API
+// این پیکربندی:
+// - JWT را به عنوان روش احراز هویت با استفاده از AddJwtBearer تنظیم می‌کند
+// - از یک کلید امنیتی متقارن برای اعتبارسنجی توکن استفاده می‌کند
+// - پارامترهای اعتبارسنجی توکن را پیکربندی می‌کند:
+//   * کلید امضای مرجع را برای اطمینان از صحت توکن اعتبارسنجی می‌کند
+//   * اعتبارسنجی مرجع و مخاطبان را غیرفعال می‌کند (برای توسعه، در محیط تولید باید فعال شود)
+//   * URL مرجع را به سرور هویت تنظیم می‌کند
+//   * مرجع و مخاطبان مورد انتظار برای اعتبارسنجی توکن را تعریف می‌کند
 
 string jwtSecret = "bf4e7749-5d6b-4e2b-91cd-be7e15466f34bf4e7749-5d6b-4e2b-91cd-be7e15466f34bf4e7749-5d6b-4e2b-91cd-be7e15466f34bf4e7749-5d6b-4e2b-91cd-be7e15466f34bf4e7749-5d6b-4e2b"; // At least 16 characters
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
