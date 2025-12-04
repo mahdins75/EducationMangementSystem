@@ -14,49 +14,38 @@
         افزودن موسسه جدید
     </div>
     <div class="card-body">
-        <EditForm Model="newUser" OnValidSubmit="@(() => AddUser())">
+        <EditForm Model="newInstitution" OnValidSubmit="@(() => AddInstitution())">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
             <div class="row">
                 <div class="col-md-3">
                     <label>@GetDisplayName(nameof(InstitutionViewModel.Name))</label>
-                    <InputText class="form-control" @bind-Value="newUser.Name" />
-                    <ValidationMessage For="@(() => newUser.Name)" />
+                    <InputText class="form-control" @bind-Value="newInstitution.Name" />
+                    <ValidationMessage For="@(() => newInstitution.Name)" />
 
-                </div>
-                <div class="col-md-3">
-                    <label>@GetDisplayName(nameof(InstitutionViewModel.LastName))</label>
-                    <InputText class="form-control" @bind-Value="newUser.LastName" />
-                    <ValidationMessage For="@(() => newUser.LastName)" />
-
-                </div>
-                <div class="col-md-3">
-                    <label>@GetDisplayName(nameof(InstitutionViewModel.UserName))</label>
-                    <InputText class="form-control" @bind-Value="newUser.UserName" />
-                    <ValidationMessage For="@(() => newUser.UserName)" />
-
-                </div>
-                <div class="col-md-3">
-                    <label>@GetDisplayName(nameof(InstitutionViewModel.PhoneNumber))</label>
-                    <InputText class="form-control" @bind-Value="newUser.PhoneNumber" />
-                    <ValidationMessage For="@(() => newUser.PhoneNumber)" />
-
-                </div>
-                <div class="col-md-3">
-                    <label>@GetDisplayName(nameof(InstitutionViewModel.Password))</label>
-                    <InputText type="password" class="form-control" @bind-Value="newUser.Password" />
-                    <ValidationMessage For="@(() => newUser.Password)" />
-
-                </div>
-                <div class="col-md-3">
-                    <label>@GetDisplayName(nameof(InstitutionViewModel.ConfirmPassword))</label>
-                    <InputText type="password" class="form-control" @bind-Value="newUser.ConfirmPassword" />
-                    <ValidationMessage For="@(() => newUser.ConfirmPassword)" />
                 </div>
                 <div class="col-md-3">
                     <label>@GetDisplayName(nameof(InstitutionViewModel.Address))</label>
-                    <InputTextArea class="form-control" @bind-Value="newUser.Address" />
+                    <InputText class="form-control" @bind-Value="newInstitution.Address" />
+                    <ValidationMessage For="@(() => newInstitution.Address)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.Description))</label>
+                    <InputText class="form-control" @bind-Value="newInstitution.Description" />
+                    <ValidationMessage For="@(() => newInstitution.ClassesCount)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.Phone))</label>
+                    <InputText class="form-control" @bind-Value="newInstitution.Phone" />
+                    <ValidationMessage For="@(() => newInstitution.Phone)" />
+
+                </div>
+                <div class="col-md-3">
+                    <label>@GetDisplayName(nameof(InstitutionViewModel.Address))</label>
+                    <InputTextArea class="form-control" @bind-Value="newInstitution.Address" />
                 </div>
 
             </div>
@@ -110,8 +99,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        newUser = new();
-        statusDropDownData = new();
+        newInstitution = new();
         ownerDropDownData = new();
         StateHasChanged();
     }
@@ -148,7 +136,7 @@
         }
         else
         {
-            newUser = new InstitutionViewModel();
+            newInstitution = new InstitutionViewModel();
         }
 
         isProcessing = false;
